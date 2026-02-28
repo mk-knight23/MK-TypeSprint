@@ -97,6 +97,55 @@ To clear data:
 └── package.json     # Project metadata
 ```
 
+## Architecture
+
+### Single-File Architecture
+
+This application uses a progressive enhancement pattern with all code in a single HTML file:
+
+```
+index.html
+├── <head>
+│   ├── Meta tags & SEO
+│   ├── Internal CSS (<style>)
+│   │   ├── CSS Variables (theming)
+│   │   ├── Reset & Base Styles
+│   │   ├── Layout (Flexbox/Grid)
+│   │   ├── Component Styles
+│   │   └── Responsive Queries
+│   └── Preconnect (fonts)
+└── <body>
+    ├── Header (logo, controls)
+    ├── Main (game area, results)
+    ├── Internal JavaScript (<script>)
+    │   ├── State Management
+    │   ├── DOM Elements Cache
+    │   ├── Game Logic (word selection, timer)
+    │   ├── Input Handling (typing, validation)
+    │   ├── Statistics (WPM, accuracy)
+    │   ├── UI Updates (highlighting, modal)
+    │   ├── Storage (localStorage)
+    │   └── Event Listeners
+    └── Footer
+```
+
+### Core Patterns
+
+- **State Object**: Centralized application state
+- **Event Delegation**: Efficient event handling
+- **localStorage**: Persistent data without backend
+- **CSS Variables**: Dynamic theming (light/dark)
+- **requestAnimationFrame**: Smooth animations
+- **Debouncing**: Optimized input handling
+
+### Data Flow
+
+```
+User Input → Event Listener → Validation → State Update → UI Render → Storage
+```
+
+## Deployment
+
 ## Performance
 
 - **Load Time**: <100ms
@@ -120,3 +169,78 @@ Developed as a modern typing practice tool for improving keyboard skills.
 ## License
 
 MIT License - Free to use and modify.
+
+## Deployment
+
+### Quick Deploy
+
+Since this is a static HTML file, you can deploy it anywhere:
+
+```bash
+# Deploy to Vercel (recommended)
+npm install -g vercel
+vercel
+
+# Deploy to Netlify
+npm install -g netlify-cli
+netlify deploy --prod
+
+# Deploy to GitHub Pages
+# Settings → Pages → Source: main branch
+```
+
+### Live Demos
+
+| Platform | URL |
+|----------|-----|
+| Vercel | [Deployed Link] |
+| Netlify | [Deployed Link] |
+| GitHub Pages | [Deployed Link] |
+
+### Custom Domain
+
+After deploying, add a custom domain:
+1. Go to platform settings
+2. Add your domain (e.g., typing.yourdomain.com)
+3. Update DNS records (CNAME)
+4. Enable SSL/HTTPS (automatic)
+
+## Contributing
+
+Contributions are welcome! Here's how you can help:
+
+### Setup
+
+```bash
+git clone https://github.com/mk-knight23/11-web-keyboard-practice.git
+cd 11-web-keyboard-practice
+npm start
+```
+
+### Making Changes
+
+1. Create a feature branch: `git checkout -b feature/your-feature`
+2. Edit `index.html` (HTML/CSS/JS all in one file)
+3. Test locally in multiple browsers
+4. Submit a pull request
+
+### Feature Ideas
+
+- Add more word languages (Spanish, French, etc.)
+- Sound effects on typing
+- Multiplayer typing races
+- Leaderboards with cloud sync
+- Typing practice with code snippets
+- Voice dictation mode
+
+### Code Style
+
+- Use semantic HTML5
+- Follow existing CSS conventions
+- Write clean ES6+ JavaScript
+- Add comments for complex logic
+- Ensure accessibility (ARIA, keyboard nav)
+
+---
+
+Built with ❤️ by MK
