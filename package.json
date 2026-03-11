@@ -5,6 +5,7 @@
   "description": "Modern typing practice application with real-time WPM tracking",
   "type": "module",
   "scripts": {
+    "production": "npm run build && npm start",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
