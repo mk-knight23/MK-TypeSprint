@@ -11,6 +11,13 @@ All notable changes to this project will be documented in this file.
 - New: data controls in the stats area — Export JSON (storage.exportAll download), Import JSON (validated storage.importAll with success/error feedback), and Delete All Data (confirm-gated; clears namespaced + legacy keys).
 - New: progress dashboard — WPM trend sparkline (inline SVG), best WPM/accuracy records, tests taken, and total practice minutes, all from real stored history.
 - CSS intentionally remains inline in index.html this wave.
+- A11y (WCAG 2.2 AA, wave-2 audit fixes):
+  - Global Space hijack fixed (TS-1): Space starts a test only when nothing interactive is focused (`document.activeElement === document.body`) and Start is enabled, restoring Space activation of focused controls and page scroll. New pure guards in `src/keyboard.js`; no single-key shortcut fires on editable targets (TS-6).
+  - Keyboard trap fixed (TS-2): Escape now aborts a running test and returns focus to the Start button, giving keyboard users an exit from the typing input.
+  - Results modal focus management (TS-3): focus moves to "Try Again" on open, Tab is trapped inside the dialog, and focus returns to Start on close (Close / Try Again / overlay / Esc). New `src/lib/focus-trap.js`; `role="dialog"` + `aria-modal` were already present.
+  - Muted-label contrast (TS-4): light `--text-muted` `#94a3b8`→`#5b6b80` (2.18→4.63:1 on page bg) and dark `#64748b`→`#8b96a9` (3.43→6.25:1), both clearing AA 4.5:1 while preserving the muted/secondary hierarchy.
+  - Heatmap key labels (TS-5): label color is now chosen per key (black/white) by background luminance, guaranteeing ≥4.59:1 across the accuracy scale (was as low as 2.12:1) with the green→red hue scale unchanged.
+  - New tests: keyboard guards, focus-trap wrap resolver, real-DOM modal focus + Space/Esc behavior, and a numeric heatmap-contrast sweep.
 
 ## [2.3.0] - 2026-07-22
 - P0 upgrade pass: fixed brand spelling (Qazi → Kazi), removed stale deploy artifacts, replaced legacy Vercel builds config with modern SPA rewrites + security headers.
