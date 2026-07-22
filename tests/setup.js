@@ -28,3 +28,27 @@ if (typeof globalThis.localStorage === 'undefined') {
     configurable: true,
   });
 }
+
+// jsdom does not implement matchMedia — the theme module needs it.
+if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
+  window.matchMedia = (query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent() {
+      return false;
+    },
+  });
+}
+
+// jsdom logs "Not implemented" for scrollTo/scrollIntoView — stub them.
+if (typeof window !== 'undefined') {
+  window.scrollTo = () => {};
+  if (typeof Element !== 'undefined') {
+    Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {});
+  }
+}
