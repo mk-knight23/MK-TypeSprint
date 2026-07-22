@@ -32,7 +32,12 @@ export function mergePerKeyStats(aggregate, sessionPerKey) {
     for (const [rawKey, stat] of Object.entries(source)) {
       const key = normalizeKey(rawKey);
       if (!key || !stat) continue;
-      const prev = merged[key] || { hits: 0, misses: 0, total: 0, accuracy: 100 };
+      const prev = merged[key] || {
+        hits: 0,
+        misses: 0,
+        total: 0,
+        accuracy: 100,
+      };
       const hits = prev.hits + (stat.hits || 0);
       const misses = prev.misses + (stat.misses || 0);
       const total = prev.total + (stat.total || 0);
@@ -50,12 +55,15 @@ export function mergePerKeyStats(aggregate, sessionPerKey) {
 /** Read the persisted aggregate (empty object when nothing stored). */
 export function loadPerKeyStats() {
   const stored = read(STORAGE_KEYS.PER_KEY, {});
-  return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+  return stored && typeof stored === 'object' && !Array.isArray(stored)
+    ? stored
+    : {};
 }
 
 /** Merge one finished session's per-key stats into the persisted aggregate. */
 export function recordSessionPerKey(sessionPerKey) {
-  if (!sessionPerKey || Object.keys(sessionPerKey).length === 0) return loadPerKeyStats();
+  if (!sessionPerKey || Object.keys(sessionPerKey).length === 0)
+    return loadPerKeyStats();
   const merged = mergePerKeyStats(loadPerKeyStats(), sessionPerKey);
   write(STORAGE_KEYS.PER_KEY, merged);
   return merged;
@@ -83,7 +91,9 @@ export function renderHeatmap() {
         const stat = stats[key];
         const isSpace = key === ' ';
         const classes = `heatmap-key${isSpace ? ' heatmap-space' : ''}${stat ? '' : ' heatmap-empty'}`;
-        const style = stat ? ` style="background:${heatColor(stat.accuracy)};color:#fff"` : '';
+        const style = stat
+          ? ` style="background:${heatColor(stat.accuracy)};color:#fff"`
+          : '';
         const title = stat
           ? `${keyLabel(key)} — ${stat.accuracy}% accuracy (${stat.hits} hit / ${stat.misses} miss)`
           : `${keyLabel(key)} — no data yet`;

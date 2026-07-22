@@ -25,7 +25,8 @@ async function bootApp() {
 }
 
 /** Original inline endTest formulas (pre-refactor index.html). */
-const oldNetWpm = (correctChars, timeMin) => Math.round(correctChars / 5 / timeMin);
+const oldNetWpm = (correctChars, timeMin) =>
+  Math.round(correctChars / 5 / timeMin);
 const oldRawWpm = (totalChars, timeMin) => Math.round(totalChars / 5 / timeMin);
 const oldAccuracy = (correctChars, totalChars) =>
   totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
@@ -35,7 +36,13 @@ const MS_PER_KEYSTROKE = 100;
 beforeEach(() => {
   localStorage.clear();
   vi.useFakeTimers({
-    toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'],
+    toFake: [
+      'setTimeout',
+      'clearTimeout',
+      'setInterval',
+      'clearInterval',
+      'Date',
+    ],
   });
 });
 
@@ -53,7 +60,8 @@ function makeTyper(input, counters) {
     input.value = value;
     counters.total++;
     if (value.length <= target.length) {
-      if (value[value.length - 1] === target[value.length - 1]) counters.correct++;
+      if (value[value.length - 1] === target[value.length - 1])
+        counters.correct++;
       else counters.errors++;
     }
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -96,7 +104,9 @@ describe('full app boot + word-mode session (parity with original)', () => {
     expect(document.getElementById('modalErrors').textContent).toBe('0');
 
     // Persistence went through the versioned storage layer.
-    const storedHistory = JSON.parse(localStorage.getItem('typesprint:v1:history'));
+    const storedHistory = JSON.parse(
+      localStorage.getItem('typesprint:v1:history')
+    );
     expect(storedHistory).toHaveLength(1);
     expect(storedHistory[0].wpm).toBe(oldNetWpm(counters.correct, elapsedMin));
     expect(storedHistory[0].mode).toBe('word');
@@ -158,14 +168,19 @@ describe('full app boot + word-mode session (parity with original)', () => {
 
     document.getElementById('startBtn').click();
     const word = state.currentWord;
-    for (let i = 1; i <= Math.min(3, word.length); i++) type(word.slice(0, i), word);
+    for (let i = 1; i <= Math.min(3, word.length); i++)
+      type(word.slice(0, i), word);
 
     // Drain the remaining 60s of the countdown.
     vi.advanceTimersByTime(60000);
 
     expect(state.isRunning).toBe(false);
-    expect(document.getElementById('resultsModal').classList.contains('show')).toBe(true);
-    expect(document.getElementById('timerDisplay').classList.contains('show')).toBe(false);
+    expect(
+      document.getElementById('resultsModal').classList.contains('show')
+    ).toBe(true);
+    expect(
+      document.getElementById('timerDisplay').classList.contains('show')
+    ).toBe(false);
   });
 });
 
@@ -182,24 +197,35 @@ describe('boot-time migration and rendering', () => {
       difficulty: 'medium',
     };
     localStorage.setItem('typingHistory', JSON.stringify([legacyEntry]));
-    localStorage.setItem('typingStats', JSON.stringify({ tests: 7, bestWPM: 64 }));
+    localStorage.setItem(
+      'typingStats',
+      JSON.stringify({ tests: 7, bestWPM: 64 })
+    );
     localStorage.setItem('theme', 'dark');
 
     await bootApp();
 
     // Namespaced copies exist.
-    expect(JSON.parse(localStorage.getItem('typesprint:v1:history'))).toEqual([legacyEntry]);
+    expect(JSON.parse(localStorage.getItem('typesprint:v1:history'))).toEqual([
+      legacyEntry,
+    ]);
     expect(JSON.parse(localStorage.getItem('typesprint:v1:stats'))).toEqual({
       tests: 7,
       bestWPM: 64,
     });
-    expect(JSON.parse(localStorage.getItem('typesprint:v1:theme'))).toBe('dark');
+    expect(JSON.parse(localStorage.getItem('typesprint:v1:theme'))).toBe(
+      'dark'
+    );
 
     // And they drive the UI: stats panel, history list, theme attribute.
     expect(document.getElementById('statTests').textContent).toBe('7');
     expect(document.getElementById('statBest').textContent).toBe('64');
-    expect(document.getElementById('historySection').classList.contains('show')).toBe(true);
-    expect(document.getElementById('historyList').innerHTML).toContain('<strong>64</strong>');
+    expect(
+      document.getElementById('historySection').classList.contains('show')
+    ).toBe(true);
+    expect(document.getElementById('historyList').innerHTML).toContain(
+      '<strong>64</strong>'
+    );
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
   });
 
@@ -208,7 +234,9 @@ describe('boot-time migration and rendering', () => {
     expect(document.documentElement.getAttribute('data-theme')).toBe('light');
     document.getElementById('themeToggle').click();
     expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-    expect(JSON.parse(localStorage.getItem('typesprint:v1:theme'))).toBe('dark');
+    expect(JSON.parse(localStorage.getItem('typesprint:v1:theme'))).toBe(
+      'dark'
+    );
   });
 });
 
@@ -235,9 +263,13 @@ describe('keyboard heatmap (feature 2)', () => {
     }
 
     // The rendered grid has colored keys with count tooltips.
-    const colored = document.querySelectorAll('#keyboardHeatmap .heatmap-key:not(.heatmap-empty)');
+    const colored = document.querySelectorAll(
+      '#keyboardHeatmap .heatmap-key:not(.heatmap-empty)'
+    );
     expect(colored.length).toBeGreaterThan(0);
-    expect(colored[0].getAttribute('title')).toMatch(/% accuracy \(\d+ hit \/ \d+ miss\)/);
+    expect(colored[0].getAttribute('title')).toMatch(
+      /% accuracy \(\d+ hit \/ \d+ miss\)/
+    );
     expect(colored[0].getAttribute('style')).toContain('hsl');
   });
 });
@@ -246,7 +278,8 @@ describe('weak-key practice mode (feature 3)', () => {
   it('explains the recommendation and serves words containing weak keys', async () => {
     // Seed an aggregate where q and z are clearly weakest.
     const seed = {};
-    for (const k of 'aeionrst') seed[k] = { hits: 20, misses: 0, total: 20, accuracy: 100 };
+    for (const k of 'aeionrst')
+      seed[k] = { hits: 20, misses: 0, total: 20, accuracy: 100 };
     seed.q = { hits: 1, misses: 9, total: 10, accuracy: 10 };
     seed.z = { hits: 2, misses: 8, total: 10, accuracy: 20 };
     localStorage.setItem('typesprint:v1:perKey', JSON.stringify(seed));
@@ -254,7 +287,9 @@ describe('weak-key practice mode (feature 3)', () => {
     const { state } = await bootApp();
     document.querySelector('.btn-option[data-mode="weak"]').click();
     expect(state.mode).toBe('weak');
-    expect(document.getElementById('weakKeyInfo').textContent).toContain('Practicing: q, z');
+    expect(document.getElementById('weakKeyInfo').textContent).toContain(
+      'Practicing: q, z'
+    );
 
     document.getElementById('startBtn').click();
     expect(state.isRunning).toBe(true);
@@ -262,17 +297,25 @@ describe('weak-key practice mode (feature 3)', () => {
     const words = [];
     for (let i = 0; i < 40; i++) {
       words.push(state.currentWord);
-      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      const e = new KeyboardEvent('keydown', {
+        key: 'Tab',
+        bubbles: true,
+        cancelable: true,
+      });
       document.getElementById('wordInput').dispatchEvent(e); // Tab-skip to next word
     }
-    const weakRate = words.filter((w) => w.includes('q') || w.includes('z')).length / words.length;
+    const weakRate =
+      words.filter((w) => w.includes('q') || w.includes('z')).length /
+      words.length;
     expect(weakRate).toBeGreaterThan(0.4);
   });
 
   it('falls back to regular words and says so when data is insufficient', async () => {
     const { state } = await bootApp();
     document.querySelector('.btn-option[data-mode="weak"]').click();
-    expect(document.getElementById('weakKeyInfo').textContent).toContain('Not enough per-key data');
+    expect(document.getElementById('weakKeyInfo').textContent).toContain(
+      'Not enough per-key data'
+    );
 
     document.getElementById('startBtn').click();
     expect(typeof state.currentWord).toBe('string');
@@ -289,14 +332,19 @@ describe('weak-key practice mode (feature 3)', () => {
     const toggle = document.getElementById('weakKeyToggle');
     toggle.checked = false;
     toggle.dispatchEvent(new Event('change', { bubbles: true }));
-    expect(document.getElementById('weakKeyInfo').textContent).toContain('targeting is off');
+    expect(document.getElementById('weakKeyInfo').textContent).toContain(
+      'targeting is off'
+    );
   });
 });
 
 describe('data controls (feature 4)', () => {
   it('delete-all wipes namespaced and legacy keys after confirm', async () => {
     localStorage.setItem('typingHistory', JSON.stringify([{ wpm: 50 }]));
-    localStorage.setItem('typingStats', JSON.stringify({ tests: 2, bestWPM: 50 }));
+    localStorage.setItem(
+      'typingStats',
+      JSON.stringify({ tests: 2, bestWPM: 50 })
+    );
     await bootApp(); // migration populates typesprint:v1:* keys
     expect(localStorage.getItem('typesprint:v1:history')).not.toBeNull();
 
@@ -334,16 +382,27 @@ describe('progress dashboard (feature 5)', () => {
     });
     localStorage.setItem(
       'typingHistory',
-      JSON.stringify([mkEntry(70, 96, 60), mkEntry(65, 92, 90), mkEntry(60, 90, 30)])
+      JSON.stringify([
+        mkEntry(70, 96, 60),
+        mkEntry(65, 92, 90),
+        mkEntry(60, 90, 30),
+      ])
     );
-    localStorage.setItem('typingStats', JSON.stringify({ tests: 3, bestWPM: 70 }));
+    localStorage.setItem(
+      'typingStats',
+      JSON.stringify({ tests: 3, bestWPM: 70 })
+    );
 
     await bootApp();
 
     const dash = document.getElementById('progressDashboard');
     expect(dash.classList.contains('show')).toBe(true);
-    expect(dash.querySelector('svg.spark polyline').getAttribute('points')).toBeTruthy();
-    const values = [...dash.querySelectorAll('.dash-value')].map((n) => n.textContent);
+    expect(
+      dash.querySelector('svg.spark polyline').getAttribute('points')
+    ).toBeTruthy();
+    const values = [...dash.querySelectorAll('.dash-value')].map(
+      (n) => n.textContent
+    );
     expect(values).toEqual(['70', '96%', '3', '3']); // best WPM, best acc, tests, minutes
   });
 });

@@ -16,7 +16,11 @@ const SPARK_PAD = 4;
  * width x height viewBox (padded). Returns '' for fewer than 2 values.
  * @param {number[]} values — chronological (oldest first)
  */
-export function buildSparklinePoints(values, width = SPARK_WIDTH, height = SPARK_HEIGHT) {
+export function buildSparklinePoints(
+  values,
+  width = SPARK_WIDTH,
+  height = SPARK_HEIGHT
+) {
   if (!Array.isArray(values) || values.length < 2) return '';
   const min = Math.min(...values);
   const max = Math.max(...values);
@@ -46,7 +50,8 @@ export function totalPracticeMinutes(history) {
 export function bestAccuracy(history) {
   if (!Array.isArray(history) || history.length === 0) return 0;
   return history.reduce(
-    (best, entry) => Math.max(best, Number.isFinite(entry?.accuracy) ? entry.accuracy : 0),
+    (best, entry) =>
+      Math.max(best, Number.isFinite(entry?.accuracy) ? entry.accuracy : 0),
     0
   );
 }

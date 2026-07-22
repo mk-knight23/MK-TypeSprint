@@ -17,7 +17,8 @@ import {
        : 0;
    ============================================ */
 const oldRawWpm = (totalChars, timeMin) => Math.round(totalChars / 5 / timeMin);
-const oldNetWpm = (correctChars, timeMin) => Math.round(correctChars / 5 / timeMin);
+const oldNetWpm = (correctChars, timeMin) =>
+  Math.round(correctChars / 5 / timeMin);
 const oldAccuracy = (correctChars, totalChars) =>
   totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 0;
 
@@ -36,13 +37,19 @@ const CASES = [
 ];
 
 describe('typing-metrics parity with the original inline formulas', () => {
-  it.each(CASES)('rawWPM parity for totalChars=%i elapsed=%fs', (total, _correct, sec) => {
-    expect(calculateRawWpm(total, sec)).toBe(oldRawWpm(total, sec / 60));
-  });
+  it.each(CASES)(
+    'rawWPM parity for totalChars=%i elapsed=%fs',
+    (total, _correct, sec) => {
+      expect(calculateRawWpm(total, sec)).toBe(oldRawWpm(total, sec / 60));
+    }
+  );
 
-  it.each(CASES)('netWPM parity for correctChars=%i (case %#)', (_total, correct, sec) => {
-    expect(calculateNetWpm(correct, sec)).toBe(oldNetWpm(correct, sec / 60));
-  });
+  it.each(CASES)(
+    'netWPM parity for correctChars=%i (case %#)',
+    (_total, correct, sec) => {
+      expect(calculateNetWpm(correct, sec)).toBe(oldNetWpm(correct, sec / 60));
+    }
+  );
 
   it.each(CASES)('accuracy parity (case %#)', (total, correct) => {
     expect(calculateAccuracy(correct, total)).toBe(oldAccuracy(correct, total));

@@ -477,7 +477,9 @@ export function getWeakKeyWord(weakKeys, difficulty, rng = Math.random) {
   const keys = Array.isArray(weakKeys)
     ? weakKeys.map((k) => String(k).toLowerCase()).filter((k) => k.length === 1)
     : [];
-  const pool = keys.length ? bank.filter((w) => keys.some((k) => w.includes(k))) : [];
+  const pool = keys.length
+    ? bank.filter((w) => keys.some((k) => w.includes(k)))
+    : [];
   if (pool.length > 0 && rng() < WEAK_POOL_PROBABILITY) return pick(pool, rng);
   return pick(bank, rng);
 }

@@ -15,7 +15,9 @@ describe('validateImportPayload', () => {
   });
 
   it('accepts a payload with an empty data section', () => {
-    expect(validateImportPayload({ version: 1, data: {} })).toEqual({ ok: true });
+    expect(validateImportPayload({ version: 1, data: {} })).toEqual({
+      ok: true,
+    });
   });
 
   it('rejects non-objects', () => {
@@ -35,7 +37,11 @@ describe('validateImportPayload', () => {
   });
 
   it('rejects malformed history or stats shapes', () => {
-    expect(validateImportPayload({ version: 1, data: { history: 'nope' } }).ok).toBe(false);
-    expect(validateImportPayload({ version: 1, data: { stats: 5 } }).ok).toBe(false);
+    expect(
+      validateImportPayload({ version: 1, data: { history: 'nope' } }).ok
+    ).toBe(false);
+    expect(validateImportPayload({ version: 1, data: { stats: 5 } }).ok).toBe(
+      false
+    );
   });
 });

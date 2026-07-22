@@ -26,9 +26,16 @@ export function validateImportPayload(payload) {
     return { ok: false, reason: 'Backup must be a JSON object.' };
   }
   if (payload.version !== EXPORT_VERSION) {
-    return { ok: false, reason: `Unsupported backup version (expected ${EXPORT_VERSION}).` };
+    return {
+      ok: false,
+      reason: `Unsupported backup version (expected ${EXPORT_VERSION}).`,
+    };
   }
-  if (!payload.data || typeof payload.data !== 'object' || Array.isArray(payload.data)) {
+  if (
+    !payload.data ||
+    typeof payload.data !== 'object' ||
+    Array.isArray(payload.data)
+  ) {
     return { ok: false, reason: 'Backup is missing its data section.' };
   }
   if ('history' in payload.data && !Array.isArray(payload.data.history)) {
@@ -107,13 +114,17 @@ function handleDeleteAll() {
 
 /** Wire the export/import/delete buttons. Call once at bootstrap. */
 export function initDataControls() {
-  if (el.exportDataBtn) el.exportDataBtn.addEventListener('click', handleExport);
+  if (el.exportDataBtn)
+    el.exportDataBtn.addEventListener('click', handleExport);
   if (el.importDataBtn && el.importFileInput) {
-    el.importDataBtn.addEventListener('click', () => el.importFileInput.click());
+    el.importDataBtn.addEventListener('click', () =>
+      el.importFileInput.click()
+    );
     el.importFileInput.addEventListener('change', (e) => {
       handleImportFile(e.target.files && e.target.files[0]);
       e.target.value = '';
     });
   }
-  if (el.deleteAllDataBtn) el.deleteAllDataBtn.addEventListener('click', handleDeleteAll);
+  if (el.deleteAllDataBtn)
+    el.deleteAllDataBtn.addEventListener('click', handleDeleteAll);
 }

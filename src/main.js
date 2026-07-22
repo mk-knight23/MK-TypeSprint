@@ -77,8 +77,10 @@ el.modeButtons.forEach((btn) => {
 
     // Weak-key practice controls
     const isWeak = state.mode === 'weak';
-    if (el.weakKeyGroup) el.weakKeyGroup.style.display = isWeak ? 'flex' : 'none';
-    if (el.weakKeyInfo) el.weakKeyInfo.style.display = isWeak ? 'block' : 'none';
+    if (el.weakKeyGroup)
+      el.weakKeyGroup.style.display = isWeak ? 'flex' : 'none';
+    if (el.weakKeyInfo)
+      el.weakKeyInfo.style.display = isWeak ? 'block' : 'none';
     if (isWeak) updateWeakKeyExplainer();
 
     track('mode_changed', { mode: state.mode });

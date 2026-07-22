@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { getCurrentWeakKeys, WEAK_KEY_COUNT, MIN_KEY_SAMPLES } from '../practice.js';
+import {
+  getCurrentWeakKeys,
+  WEAK_KEY_COUNT,
+  MIN_KEY_SAMPLES,
+} from '../practice.js';
 import { write, STORAGE_KEYS } from '../lib/storage.js';
 
 function stat(hits, misses) {
@@ -44,7 +48,7 @@ describe('getCurrentWeakKeys', () => {
   it('ignores non-letter keys (punctuation, digits, space)', () => {
     write(STORAGE_KEYS.PER_KEY, {
       ';': stat(0, 10),
-      '7': stat(0, 10),
+      7: stat(0, 10),
       ' ': stat(0, 10),
       n: stat(5, 5),
     });

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { buildSparklinePoints, totalPracticeMinutes, bestAccuracy } from '../dashboard.js';
+import {
+  buildSparklinePoints,
+  totalPracticeMinutes,
+  bestAccuracy,
+} from '../dashboard.js';
 
 describe('buildSparklinePoints', () => {
   it('returns empty string for fewer than 2 values', () => {
@@ -33,14 +37,18 @@ describe('totalPracticeMinutes', () => {
   });
 
   it('ignores malformed entries', () => {
-    expect(totalPracticeMinutes([{ time: 120 }, {}, { time: 'x' }, null])).toBe(2);
+    expect(totalPracticeMinutes([{ time: 120 }, {}, { time: 'x' }, null])).toBe(
+      2
+    );
     expect(totalPracticeMinutes(undefined)).toBe(0);
   });
 });
 
 describe('bestAccuracy', () => {
   it('returns the highest accuracy in history', () => {
-    expect(bestAccuracy([{ accuracy: 91 }, { accuracy: 97 }, { accuracy: 88 }])).toBe(97);
+    expect(
+      bestAccuracy([{ accuracy: 91 }, { accuracy: 97 }, { accuracy: 88 }])
+    ).toBe(97);
   });
 
   it('returns 0 for empty or missing history', () => {
