@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://11-web-keyboard-practice.vercel.app/sitemap.xml
