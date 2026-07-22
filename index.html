@@ -6,7 +6,7 @@
     <title>MK TypeSprint — Typing Speed Test &amp; Practice Platform</title>
     <meta name="description" content="Free typing speed test. Practice with words, quotes, code, and numbers. Track WPM, accuracy, and personal bests over time." />
     <meta name="keywords" content="typing test, typing speed, WPM test, typing practice, keyboard practice, coding typing test, touch typing, MK TypeSprint" />
-    <meta name="author" content="Qazi Musharof" />
+    <meta name="author" content="Kazi Musharraf" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://11-web-keyboard-practice.vercel.app/" />
 
@@ -51,8 +51,16 @@
       },
       "author": {
         "@type": "Person",
-        "name": "Qazi Musharof"
-      }
+        "name": "Kazi Musharraf",
+        "url": "https://www.mkazi.live",
+        "sameAs": ["https://github.com/mk-knight23"]
+      },
+      "creator": {
+        "@type": "Person",
+        "name": "Kazi Musharraf",
+        "url": "https://www.mkazi.live"
+      },
+      "isAccessibleForFree": true
     }
     </script>
     <script type="application/ld+json">
@@ -88,18 +96,36 @@
     }
     </script>
 
-    <!-- GTM placeholder -->
+    <!--
+      Analytics activation policy:
+      - GTM: only injected when VITE_GTM_ID is a real GTM-XXX id at build time.
+      - GA4: only injected when VITE_GA4_ID is a G-XXXX id at build time.
+      - Vercel Web Analytics + Speed Insights: enable in the Vercel project dashboard;
+        Vercel injects the script server-side. No repo change needed.
+      Nothing is loaded when env vars are unset. See docs/ANALYTICS.md.
+    -->
     <script>
-      // Google Tag Manager - Activate by setting window.__GTM_ID
       (function(){
-        var gtmId = typeof window.__GTM_ID !== 'undefined' ? window.__GTM_ID : null;
-        if (!gtmId) return;
-        var s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://www.googletagmanager.com/gtm.js?id=' + gtmId;
-        document.head.appendChild(s);
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({'gtm.start': new Date().getTime(), event: 'gtm.js'});
+        var GTM_ID = "%VITE_GTM_ID%";
+        if (GTM_ID && GTM_ID.charAt(0) !== '%' && /^GTM-[A-Z0-9]+$/.test(GTM_ID)) {
+          window.dataLayer = window.dataLayer || [];
+          window.dataLayer.push({'gtm.start': Date.now(), event: 'gtm.js'});
+          var s = document.createElement('script');
+          s.async = true;
+          s.src = 'https://www.googletagmanager.com/gtm.js?id=' + GTM_ID;
+          document.head.appendChild(s);
+        }
+        var GA4_ID = "%VITE_GA4_ID%";
+        if (GA4_ID && GA4_ID.charAt(0) !== '%' && /^G-[A-Z0-9]+$/.test(GA4_ID)) {
+          var g = document.createElement('script');
+          g.async = true;
+          g.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA4_ID;
+          document.head.appendChild(g);
+          window.dataLayer = window.dataLayer || [];
+          window.gtag = function(){ window.dataLayer.push(arguments); };
+          window.gtag('js', new Date());
+          window.gtag('config', GA4_ID, { anonymize_ip: true });
+        }
       })();
     </script>
 
@@ -1316,7 +1342,7 @@
         <div class="section-card">
           <h2>About MK TypeSprint</h2>
           <p>MK TypeSprint is a free, privacy-first typing practice platform built for people who want to improve their typing speed and accuracy. No accounts required, no data collected — your practice history stays in your browser.</p>
-          <p style="margin-top:12px">Built and maintained by <a href="https://www.mkazi.live" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-weight:700">Qazi Musharof — Kazi Developer</a>, an AI Engineer, Systems Architect, and Full-Stack Developer.</p>
+          <p style="margin-top:12px">Built and maintained by <a href="https://www.mkazi.live" target="_blank" rel="noopener noreferrer" style="color:var(--primary);text-decoration:none;font-weight:700">Kazi Musharraf — Kazi Developer</a>, an AI Engineer, Systems Architect, and Full-Stack Developer.</p>
 
           <h3 style="margin-top:24px">Features</h3>
           <ul>
@@ -1401,7 +1427,7 @@
           <a href="#" class="footer-link" onclick="showSection('about'); return false;">About</a>
           <a href="https://github.com/mk-knight23/11-web-keyboard-practice" target="_blank" rel="noopener noreferrer" class="footer-link">GitHub</a>
         </div>
-        <div class="footer-copy">© 2026 <a href="https://www.mkazi.live" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">Qazi Musharof — Kazi Developer</a>. Free and open-source typing practice platform.</div>
+        <div class="footer-copy">© 2026 <a href="https://www.mkazi.live" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:underline">Kazi Musharraf — Kazi Developer</a>. Free and open-source typing practice platform.</div>
       </div>
     </footer>
 
