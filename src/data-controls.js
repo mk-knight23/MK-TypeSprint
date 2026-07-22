@@ -13,6 +13,7 @@ import {
   renderHistory,
 } from './history.js';
 import { renderHeatmap } from './heatmap.js';
+import { sanitizeHistoryEntry, sanitizeStats, sanitizePerKey } from './sanitize.js';
 
 const EXPORT_VERSION = 1;
 
@@ -48,6 +49,28 @@ export function validateImportPayload(payload) {
     return { ok: false, reason: 'Backup stats must be an object.' };
   }
   return { ok: true };
+}
+
+/**
+ * Deep-sanitize a structurally valid payload: every record is rebuilt from
+ * validated primitives so imported strings can never reach an innerHTML
+ * template unmodified. Returns a NEW payload object.
+ */
+export function sanitizeImportPayload(payload) {
+  const data = payload.data;
+  const clean = {};
+  if (Array.isArray(data.history)) {
+    clean.history = data.history
+      .map((entry) => sanitizeHistoryEntry(entry))
+      .filter(Boolean)
+      .slice(0, 100);
+  }
+  if (data.stats) clean.stats = sanitizeStats(data.stats);
+  if (data.perKey) clean.perKey = sanitizePerKey(data.perKey);
+  if (typeof data.theme === 'string' && ['light', 'dark'].includes(data.theme)) {
+    clean.theme = data.theme;
+  }
+  return { version: payload.version, data: clean };
 }
 
 function refreshAfterDataChange() {
@@ -87,6 +110,7 @@ async function handleImportFile(file) {
     showMessage(`Import failed: ${validation.reason}`, 'error');
     return;
   }
+  payload = sanitizeImportPayload(payload);
   if (!importAll(payload)) {
     showMessage('Import failed: data could not be saved.', 'error');
     return;

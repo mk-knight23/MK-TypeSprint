@@ -88,7 +88,16 @@ export function renderHeatmap() {
   const rowsHtml = QWERTY_ROWS.map((row) => {
     const keysHtml = row
       .map((key) => {
-        const stat = stats[key];
+        const raw = stats[key];
+        // Stored values may come from imported data — coerce to finite numbers
+        // before they reach style/title attribute interpolation.
+        const stat = raw
+          ? {
+              accuracy: Math.max(0, Math.min(100, Number(raw.accuracy) || 0)),
+              hits: Math.max(0, Number(raw.hits) || 0),
+              misses: Math.max(0, Number(raw.misses) || 0),
+            }
+          : null;
         const isSpace = key === ' ';
         const classes = `heatmap-key${isSpace ? ' heatmap-space' : ''}${stat ? '' : ' heatmap-empty'}`;
         const style = stat

@@ -82,9 +82,9 @@ export function renderDashboard() {
     </div>
     ${sparkline}
     <div class="dash-records">
-      <div class="dash-record"><span class="dash-value">${stats.bestWPM}</span><span class="dash-label">Best WPM</span></div>
+      <div class="dash-record"><span class="dash-value">${Number(stats.bestWPM) || 0}</span><span class="dash-label">Best WPM</span></div>
       <div class="dash-record"><span class="dash-value">${bestAccuracy(history)}%</span><span class="dash-label">Best Accuracy</span></div>
-      <div class="dash-record"><span class="dash-value">${stats.tests}</span><span class="dash-label">Tests Taken</span></div>
+      <div class="dash-record"><span class="dash-value">${Number(stats.tests) || 0}</span><span class="dash-label">Tests Taken</span></div>
       <div class="dash-record"><span class="dash-value">${totalPracticeMinutes(history)}</span><span class="dash-label">Practice Minutes</span></div>
     </div>
   `;
