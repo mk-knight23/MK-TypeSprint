@@ -57,11 +57,12 @@ export function calculateAccuracy(correctChars, totalChars) {
  */
 export function calculateConsistency(intervalsMs) {
   if (!Array.isArray(intervalsMs) || intervalsMs.length < 2) return 0;
-  const valid = intervalsMs.filter(v => Number.isFinite(v) && v > 0);
+  const valid = intervalsMs.filter((v) => Number.isFinite(v) && v > 0);
   if (valid.length < 2) return 0;
   const mean = valid.reduce((s, v) => s + v, 0) / valid.length;
   if (mean === 0) return 0;
-  const variance = valid.reduce((s, v) => s + (v - mean) ** 2, 0) / valid.length;
+  const variance =
+    valid.reduce((s, v) => s + (v - mean) ** 2, 0) / valid.length;
   const stdev = Math.sqrt(variance);
   const cv = stdev / mean;
   return Math.max(0, Math.min(100, Math.round((1 - cv) * 100)));
@@ -77,14 +78,16 @@ export function calculatePerKeyStats(keystrokes) {
   if (!Array.isArray(keystrokes)) return map;
   for (const k of keystrokes) {
     if (!k || typeof k.key !== 'string') continue;
-    if (!map[k.key]) map[k.key] = { hits: 0, misses: 0, total: 0, accuracy: 100 };
+    if (!map[k.key])
+      map[k.key] = { hits: 0, misses: 0, total: 0, accuracy: 100 };
     map[k.key].total += 1;
     if (k.correct) map[k.key].hits += 1;
     else map[k.key].misses += 1;
   }
   for (const key of Object.keys(map)) {
     const entry = map[key];
-    entry.accuracy = entry.total > 0 ? Math.round((entry.hits / entry.total) * 100) : 100;
+    entry.accuracy =
+      entry.total > 0 ? Math.round((entry.hits / entry.total) * 100) : 100;
   }
   return map;
 }

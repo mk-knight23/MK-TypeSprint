@@ -113,7 +113,7 @@ describe('findWeakestKeys', () => {
       d: { hits: 7, misses: 3, total: 10, accuracy: 70 },
     };
     const weakest = findWeakestKeys(perKey, { topN: 2, minSamples: 3 });
-    expect(weakest.map(k => k.key)).toEqual(['b', 'd']);
+    expect(weakest.map((k) => k.key)).toEqual(['b', 'd']);
   });
   it('excludes keys below minSamples', () => {
     const perKey = { z: { hits: 0, misses: 1, total: 1, accuracy: 0 } };

@@ -126,4 +126,5 @@ export const STORAGE_KEYS = Object.freeze({
   HISTORY: 'history',
   THEME: 'theme',
   SETTINGS: 'settings',
+  PER_KEY: 'perKey',
 });

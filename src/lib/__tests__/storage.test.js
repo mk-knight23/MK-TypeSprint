@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { read, write, remove, clearAll, exportAll, importAll, STORAGE_KEYS } from '../storage.js';
+import {
+  read,
+  write,
+  remove,
+  clearAll,
+  exportAll,
+  importAll,
+  STORAGE_KEYS,
+} from '../storage.js';
 
 beforeEach(() => {
   if (typeof localStorage !== 'undefined') localStorage.clear();

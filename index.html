@@ -1054,6 +1054,68 @@
       /* Page sections toggle */
       .page-section { display: none; }
       .page-section.active { display: block; }
+
+      /* ============================================
+         v2.4 — Heatmap, weak-key practice, data
+         controls, progress dashboard
+         ============================================ */
+      .history-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+      .weak-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; padding: 8px 0; }
+      .weak-toggle input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+      .weak-key-info {
+        text-align: center;
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-surface-alt);
+        border: 1px dashed var(--border);
+      }
+
+      .heatmap-block { margin-top: 24px; }
+      .heatmap-block h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+      .keyboard-heatmap { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+      .heatmap-row { display: flex; gap: 6px; justify-content: center; }
+      .heatmap-key {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: var(--font-mono, monospace);
+        background: var(--bg-surface-alt);
+        color: var(--text-muted);
+        cursor: default;
+        user-select: none;
+      }
+      .heatmap-space { width: 190px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .heatmap-empty { opacity: 0.55; }
+      .heatmap-hint { margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center; }
+
+      .progress-dashboard { display: none; margin-top: 24px; }
+      .progress-dashboard.show { display: block; }
+      .dash-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+      .dash-header h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+      .dash-sub { font-size: 12px; color: var(--text-muted); }
+      .spark { width: 100%; height: 48px; display: block; margin-top: 8px; }
+      .dash-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+      .dash-records { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+      .dash-record { text-align: center; padding: 12px 8px; border-radius: 8px; background: var(--bg-surface-alt); }
+      .dash-value { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+      .dash-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+      @media (max-width: 640px) {
+        .heatmap-key { width: 26px; height: 26px; font-size: 10px; }
+        .heatmap-space { width: 130px; }
+        .heatmap-row { gap: 4px; }
+        .history-actions { width: 100%; }
+      }
     </style>
   </head>
 
@@ -1062,8 +1124,8 @@
     <nav class="nav" role="navigation" aria-label="Main navigation">
       <div class="nav-inner">
         <a href="#" class="nav-brand" onclick="showSection('main'); return false;">
-          <div class="nav-logo">TF</div>
-          <div class="nav-title">Type<span>Flow</span></div>
+          <div class="nav-logo">TS</div>
+          <div class="nav-title">Type<span>Sprint</span></div>
         </a>
         <div class="nav-links">
           <a href="#" class="nav-link active" onclick="showSection('main'); return false;">Practice</a>
@@ -1143,7 +1205,12 @@
                 <button class="btn-option" data-mode="time" aria-label="Timed mode">Timer</button>
                 <button class="btn-option" data-mode="code" aria-label="Code mode">Code</button>
                 <button class="btn-option" data-mode="quotes" aria-label="Quotes mode">Quotes</button>
+                <button class="btn-option" data-mode="weak" aria-label="Weak keys practice mode">Weak Keys</button>
               </div>
+            </div>
+            <div class="setting-group" id="weakKeyGroup" style="display:none">
+              <label class="setting-label" for="weakKeyToggle">Weak-key targeting</label>
+              <label class="weak-toggle"><input type="checkbox" id="weakKeyToggle" checked /> <span>Target weakest keys</span></label>
             </div>
             <div class="setting-group" id="timerGroup" style="display:none">
               <label class="setting-label" for="timerDuration">Duration</label>
@@ -1164,6 +1231,9 @@
               </select>
             </div>
           </div>
+
+          <!-- Weak-key practice explainer -->
+          <div id="weakKeyInfo" class="weak-key-info" style="display:none" aria-live="polite"></div>
 
           <!-- Timer -->
           <div class="timer-display" id="timerDisplay">Time: <span id="timerValue">60</span>s</div>
@@ -1202,7 +1272,13 @@
         <div class="history-section" id="historySection">
           <div class="history-header">
             <h3>Test History</h3>
-            <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 16px;font-size:12px">Clear All</button>
+            <div class="history-actions">
+              <button class="btn btn-secondary" id="exportDataBtn" style="padding:8px 16px;font-size:12px">Export JSON</button>
+              <button class="btn btn-secondary" id="importDataBtn" style="padding:8px 16px;font-size:12px">Import JSON</button>
+              <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 16px;font-size:12px">Clear All</button>
+              <button class="btn btn-secondary" id="deleteAllDataBtn" style="padding:8px 16px;font-size:12px;color:#ef4444">Delete All Data</button>
+              <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" aria-label="Import TypeSprint data file" />
+            </div>
           </div>
           <div class="history-list" id="historyList">
             <div class="history-item">
@@ -1212,6 +1288,16 @@
               <span class="history-label">Mode</span>
               <span class="history-label"></span>
             </div>
+          </div>
+
+          <!-- Progress dashboard (records + WPM trend) -->
+          <div class="progress-dashboard" id="progressDashboard"></div>
+
+          <!-- Per-key accuracy heatmap -->
+          <div class="heatmap-block">
+            <h3>Key Accuracy Heatmap</h3>
+            <div id="keyboardHeatmap" class="keyboard-heatmap"></div>
+            <p class="heatmap-hint" id="heatmapHint"></p>
           </div>
         </div>
 
@@ -1418,7 +1504,7 @@
     <footer class="footer" role="contentinfo">
       <div class="footer-inner">
         <div class="footer-brand">
-          <div class="nav-logo" style="width:28px;height:28px;font-size:10px">TF</div>
+          <div class="nav-logo" style="width:28px;height:28px;font-size:10px">TS</div>
           MK TypeSprint
         </div>
         <div class="footer-links">
@@ -1431,530 +1517,6 @@
       </div>
     </footer>
 
-    <script>
-      /* ============================================
-         Analytics Utility
-         ============================================ */
-      const analytics = {
-        track(event, params = {}) {
-          // Only fire if GTM/GA4 is configured
-          if (typeof window.dataLayer !== 'undefined') {
-            window.dataLayer.push({ event, ...params });
-          }
-          // Debug mode
-          if (localStorage.getItem('analytics_debug') === 'true') {
-            console.log('[Analytics]', event, params);
-          }
-        }
-      };
-
-      /* ============================================
-         Content Banks
-         ============================================ */
-      const wordBanks = {
-        easy: ['the','be','to','of','and','a','in','that','have','it','for','not','on','with','he','as','you','do','at','this','but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their','what','so','up','out','if','about','who','get','which','go','me','when','make','can','like','time','no','just','him','know','take','people','into','year','your','good','some','could','them','see','other','than','then','now','look','only','come','its','over','think','also','back','after','use','two','how','our','work','first','well','way','even','new','want','because','any','these','give','day','most','us','is'],
-        medium: ['about','above','across','after','again','against','almost','along','already','also','although','always','among','another','answer','appear','become','before','begin','behind','believe','between','beyond','both','bring','build','business','call','change','child','city','close','company','consider','continue','country','course','develop','different','during','early','enough','every','example','experience','family','follow','general','government','great','group','happen','history','however','important','include','increase','interest','itself','keep','large','later','learn','leave','letter','level','little','local','market','member','might','million','money','month','morning','mother','movement','national','never','number','often','order','others','part','party','perhaps','place','point','policy','possible','power','present','president','problem','program','provide','public','question','rather','really','reason','result','return','right','school','second','service','several','should','since','small','social','something','special','start','state','still','story','student','study','system'],
-        hard: ['abbreviation','accommodate','achievement','acknowledge','acquisition','administrative','advertisement','ambassador','anaesthesia','anecdotal','anthropologist','architecture','assassination','bibliography','bureaucratic','catastrophe','characteristic','circumstance','classification','collaboration','commemorate','communication','comprehensive','concentration','conceptualize','conscientious','consideration','constitutional','contemporary','controversial','correspondence','demonstration','determination','disappointment','discrimination','distinguish','electromagnetic','embarrassment','encyclopedia','entrepreneur','environmental','establishment','exaggeration','examination','experimental','extraordinary','fascination','fundamental','guaranteed','hallucination','hippopotamus','humanitarian','identification','illustration','implementation','inappropriate','incomprehensible','infrastructure','interpretation','jurisdiction','justification','knowledgeable','manufacturing','mathematical','microscopic','misunderstanding','multiplication','neurological','notwithstanding','observation','opportunity','organization','overwhelming','parliamentary','participation','pharmaceutical','phenomenon','philosophical','photosynthesis','postponement','precipitation','predominantly','preliminary','preoccupation','professional','pronunciation','psychological','questionnaire','reconnaissance','recommendation','refrigerator','rehabilitation','reimbursement','reminiscence','representative','responsibility','revolutionary','sophisticated','specification','straightforward','subsequently','technological','telecommunication','temperament','theoretical','therapeutic','thermometer','tremendous','unconscious','understanding','unemployment','unfortunately','vulnerability']
-      };
-
-      const codeSnippets = {
-        javascript: [
-          'const sum = (a, b) => a + b;',
-          'function greet(name) { return `Hello, ${name}!`; }',
-          'const arr = [1, 2, 3].map(x => x * 2);',
-          'if (user && user.isActive) { sendEmail(user); }',
-          'const { name, age } = person;',
-          'async function fetchData(url) { const res = await fetch(url); return res.json(); }',
-          'const filtered = items.filter(item => item.price > 100);',
-          'try { await saveData(payload); } catch (err) { console.error(err); }',
-          'export default function App() { return <div>Hello</div>; }',
-          'const [count, setCount] = useState(0);',
-          'document.addEventListener("click", (e) => { handleClick(e); });',
-          'const total = cart.reduce((sum, item) => sum + item.price, 0);',
-        ],
-        python: [
-          'def factorial(n): return 1 if n <= 1 else n * factorial(n - 1)',
-          'result = [x ** 2 for x in range(10) if x % 2 == 0]',
-          'with open("data.json", "r") as f: data = json.load(f)',
-          'class User: def __init__(self, name): self.name = name',
-          'import pandas as pd; df = pd.read_csv("data.csv")',
-          'if __name__ == "__main__": main()',
-          'try: result = risky_operation() except ValueError as e: print(e)',
-          'async def fetch_data(url): async with aiohttp.get(url) as resp: return await resp.json()',
-          'from typing import List, Optional, Dict',
-          'lambda x, y: x + y if x > 0 else y',
-        ],
-        typescript: [
-          'interface User { id: number; name: string; email?: string; }',
-          'const greet = (name: string): string => `Hello, ${name}!`;',
-          'type Result<T> = { data: T; error: null } | { data: null; error: string };',
-          'enum Status { Active = "active", Inactive = "inactive" }',
-          'function getUser(id: number): Promise<User> { return fetch(`/api/users/${id}`).then(r => r.json()); }',
-          'const config: Record<string, unknown> = {};',
-          'export type Props = { children: React.ReactNode; className?: string; };',
-          'const [items, setItems] = useState<Item[]>([]);',
-        ],
-        sql: [
-          'SELECT name, email FROM users WHERE active = true ORDER BY created_at DESC;',
-          'INSERT INTO orders (user_id, total) VALUES (1, 99.99);',
-          'UPDATE products SET price = price * 1.10 WHERE category = \'electronics\';',
-          'SELECT u.name, COUNT(o.id) as order_count FROM users u LEFT JOIN orders o ON u.id = o.user_id GROUP BY u.name;',
-          'CREATE TABLE IF NOT EXISTS logs (id SERIAL PRIMARY KEY, message TEXT, created_at TIMESTAMP DEFAULT NOW());',
-          'DELETE FROM sessions WHERE expires_at < NOW();',
-          'SELECT DISTINCT category FROM products WHERE price BETWEEN 10 AND 100;',
-          'ALTER TABLE users ADD COLUMN last_login TIMESTAMP;',
-        ]
-      };
-
-      const quotes = [
-        'The only way to do great work is to love what you do.',
-        'Innovation distinguishes between a leader and a follower.',
-        'Stay hungry, stay foolish.',
-        'The best time to plant a tree was twenty years ago. The second best time is now.',
-        'Code is like humor. When you have to explain it, it is bad.',
-        'First, solve the problem. Then, write the code.',
-        'Simplicity is the soul of efficiency.',
-        'Any fool can write code that a computer can understand. Good programmers write code that humans can understand.',
-        'Programming is not about typing, it is about thinking.',
-        'The most disastrous thing that you can ever learn is your first programming language.',
-        'Talk is cheap. Show me the code.',
-        'Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away.',
-        'Make it work, make it right, make it fast.',
-        'The function of good software is to make the complex appear to be simple.',
-      ];
-
-      /* ============================================
-         State
-         ============================================ */
-      let state = {
-        isRunning: false,
-        currentWord: '',
-        currentText: '', // for multi-word modes
-        difficulty: 'medium',
-        mode: 'word',
-        codeLanguage: 'javascript',
-        timerDuration: 60,
-        timeLeft: 60,
-        startTime: null,
-        timerInterval: null,
-        wordsTyped: 0,
-        correctChars: 0,
-        totalChars: 0,
-        errors: 0,
-        history: JSON.parse(localStorage.getItem('typingHistory') || '[]'),
-        stats: JSON.parse(localStorage.getItem('typingStats') || '{"tests":0,"bestWPM":0}'),
-      };
-
-      /* ============================================
-         DOM Elements
-         ============================================ */
-      const el = {
-        themeToggle: document.getElementById('themeToggle'),
-        sunIcon: document.getElementById('sunIcon'),
-        moonIcon: document.getElementById('moonIcon'),
-        statWPM: document.getElementById('statWPM'),
-        statRawWPM: document.getElementById('statRawWPM'),
-        statAccuracy: document.getElementById('statAccuracy'),
-        statTests: document.getElementById('statTests'),
-        statBest: document.getElementById('statBest'),
-        difficulty: document.getElementById('difficulty'),
-        modeButtons: document.querySelectorAll('.btn-option[data-mode]'),
-        timerGroup: document.getElementById('timerGroup'),
-        codeLanguageGroup: document.getElementById('codeLanguageGroup'),
-        codeLanguage: document.getElementById('codeLanguage'),
-        timerDuration: document.getElementById('timerDuration'),
-        timerDisplay: document.getElementById('timerDisplay'),
-        timerValue: document.getElementById('timerValue'),
-        message: document.getElementById('message'),
-        wordDisplay: document.getElementById('wordDisplay'),
-        wordText: document.getElementById('wordText'),
-        wordInput: document.getElementById('wordInput'),
-        startBtn: document.getElementById('startBtn'),
-        resetBtn: document.getElementById('resetBtn'),
-        historyBtn: document.getElementById('historyBtn'),
-        historySection: document.getElementById('historySection'),
-        historyList: document.getElementById('historyList'),
-        clearHistoryBtn: document.getElementById('clearHistoryBtn'),
-        resultsModal: document.getElementById('resultsModal'),
-        modalWPM: document.getElementById('modalWPM'),
-        modalRawWPM: document.getElementById('modalRawWPM'),
-        modalAccuracy: document.getElementById('modalAccuracy'),
-        modalErrors: document.getElementById('modalErrors'),
-        modalCloseBtn: document.getElementById('modalCloseBtn'),
-        modalRestartBtn: document.getElementById('modalRestartBtn'),
-        modalPersonalBest: document.getElementById('modalPersonalBest'),
-        gameArea: document.getElementById('gameArea'),
-      };
-
-      /* ============================================
-         Page Navigation
-         ============================================ */
-      function showSection(name) {
-        document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-        const section = document.getElementById('section-' + name);
-        if (section) section.classList.add('active');
-
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-        document.querySelectorAll('.nav-link').forEach(l => {
-          if (l.textContent.toLowerCase().includes(name === 'main' ? 'practice' : name)) {
-            l.classList.add('active');
-          }
-        });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-
-      /* ============================================
-         Theme
-         ============================================ */
-      function initTheme() {
-        const saved = localStorage.getItem('theme');
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved || (systemDark ? 'dark' : 'light');
-        document.documentElement.setAttribute('data-theme', theme);
-        updateThemeIcon(theme);
-      }
-
-      function toggleTheme() {
-        const current = document.documentElement.getAttribute('data-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', next);
-        localStorage.setItem('theme', next);
-        updateThemeIcon(next);
-        analytics.track('theme_changed', { theme: next });
-      }
-
-      function updateThemeIcon(theme) {
-        el.sunIcon.style.display = theme === 'dark' ? 'block' : 'none';
-        el.moonIcon.style.display = theme === 'dark' ? 'none' : 'block';
-      }
-
-      /* ============================================
-         Content Generation
-         ============================================ */
-      function getRandomWord() {
-        const words = wordBanks[state.difficulty];
-        return words[Math.floor(Math.random() * words.length)];
-      }
-
-      function getCodeSnippet() {
-        const snippets = codeSnippets[state.codeLanguage] || codeSnippets.javascript;
-        return snippets[Math.floor(Math.random() * snippets.length)];
-      }
-
-      function getQuote() {
-        return quotes[Math.floor(Math.random() * quotes.length)];
-      }
-
-      function getNextText() {
-        switch (state.mode) {
-          case 'code': return getCodeSnippet();
-          case 'quotes': return getQuote();
-          default: return getRandomWord();
-        }
-      }
-
-      /* ============================================
-         Display
-         ============================================ */
-      function showMessage(text, type = 'info') {
-        el.message.textContent = text;
-        el.message.className = `show ${type}`;
-        setTimeout(() => { el.message.className = ''; }, 3000);
-      }
-
-      function displayWord() {
-        const typed = el.wordInput.value;
-        const target = state.currentWord;
-
-        let html = '';
-        for (let i = 0; i < target.length; i++) {
-          let cls = 'char';
-          if (i < typed.length) {
-            cls += typed[i] === target[i] ? ' correct' : ' incorrect';
-          }
-          if (i === typed.length) cls += ' current';
-          // Escape HTML entities
-          const ch = target[i] === '<' ? '&lt;' : target[i] === '>' ? '&gt;' : target[i] === '&' ? '&amp;' : target[i];
-          html += `<span class="${cls}">${ch}</span>`;
-        }
-        el.wordText.innerHTML = html;
-
-        el.wordDisplay.classList.remove('correct', 'incorrect');
-        if (typed === target) {
-          el.wordDisplay.classList.add('correct');
-        } else if (typed.length > 0 && typed[typed.length - 1] !== target[typed.length - 1]) {
-          el.wordDisplay.classList.add('incorrect');
-        }
-      }
-
-      /* ============================================
-         Game Logic
-         ============================================ */
-      function startTest() {
-        state.isRunning = true;
-        state.currentWord = getNextText();
-        state.startTime = Date.now();
-        state.wordsTyped = 0;
-        state.correctChars = 0;
-        state.totalChars = 0;
-        state.errors = 0;
-
-        // Style for code mode
-        const isCode = state.mode === 'code';
-        el.wordDisplay.classList.toggle('coding', isCode);
-        el.wordInput.classList.toggle('coding', isCode);
-
-        el.wordText.textContent = state.currentWord;
-        el.wordInput.disabled = false;
-        el.wordInput.value = '';
-        el.wordInput.focus();
-
-        el.startBtn.disabled = true;
-        el.resetBtn.disabled = false;
-        el.difficulty.disabled = true;
-
-        el.wordDisplay.classList.remove('correct', 'incorrect');
-
-        // Timer mode or code/quotes (always timed)
-        if (state.mode === 'time' || state.mode === 'code' || state.mode === 'quotes') {
-          state.timeLeft = state.timerDuration;
-          el.timerDisplay.classList.add('show');
-          el.timerValue.textContent = state.timeLeft;
-          startTimer();
-        }
-
-        showMessage('Start typing! Good luck!', 'info');
-        analytics.track('test_started', { mode: state.mode, difficulty: state.difficulty });
-      }
-
-      function startTimer() {
-        state.timerInterval = setInterval(() => {
-          state.timeLeft--;
-          el.timerValue.textContent = state.timeLeft;
-          if (state.timeLeft <= 10) el.timerDisplay.classList.add('warning');
-          if (state.timeLeft <= 0) endTest();
-        }, 1000);
-      }
-
-      function stopTimer() {
-        if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
-        el.timerDisplay.classList.remove('show', 'warning');
-      }
-
-      function endTest() {
-        state.isRunning = false;
-        stopTimer();
-
-        const timeElapsed = (Date.now() - state.startTime) / 1000;
-        const timeMin = timeElapsed / 60;
-
-        const rawWPM = Math.round(state.totalChars / 5 / timeMin);
-        const netWPM = Math.round(state.correctChars / 5 / timeMin);
-        const accuracy = state.totalChars > 0 ? Math.round((state.correctChars / state.totalChars) * 100) : 0;
-
-        // Personal best check
-        const isPersonalBest = netWPM > state.stats.bestWPM;
-
-        state.stats.tests++;
-        if (isPersonalBest) state.stats.bestWPM = netWPM;
-        localStorage.setItem('typingStats', JSON.stringify(state.stats));
-
-        // History entry
-        const entry = {
-          date: new Date().toISOString(),
-          wpm: netWPM,
-          rawWPM: rawWPM,
-          accuracy: accuracy,
-          time: Math.round(timeElapsed),
-          errors: state.errors,
-          mode: state.mode,
-          difficulty: state.difficulty,
-        };
-        state.history.unshift(entry);
-        if (state.history.length > 100) state.history.pop();
-        localStorage.setItem('typingHistory', JSON.stringify(state.history));
-
-        updateStatsDisplay();
-        renderHistory();
-
-        // Modal
-        el.modalWPM.textContent = netWPM;
-        el.modalRawWPM.textContent = rawWPM;
-        el.modalAccuracy.textContent = accuracy + '%';
-        el.modalErrors.textContent = state.errors;
-        el.modalPersonalBest.classList.toggle('show', isPersonalBest);
-        el.resultsModal.classList.add('show');
-
-        el.wordInput.disabled = true;
-        el.startBtn.disabled = false;
-        el.resetBtn.disabled = true;
-        el.difficulty.disabled = false;
-
-        analytics.track('test_completed', { mode: state.mode, wpm: netWPM, accuracy, difficulty: state.difficulty });
-        if (isPersonalBest) analytics.track('personal_best_achieved', { wpm: netWPM });
-      }
-
-      function handleInput() {
-        const typed = el.wordInput.value;
-        const target = state.currentWord;
-
-        state.totalChars++;
-        if (typed.length <= target.length) {
-          if (typed[typed.length - 1] === target[typed.length - 1]) {
-            state.correctChars++;
-          } else {
-            state.errors++;
-          }
-        }
-
-        displayWord();
-
-        // Live stats update
-        if (state.startTime) {
-          const elapsed = (Date.now() - state.startTime) / 60000;
-          if (elapsed > 0.01) {
-            el.statWPM.textContent = Math.round(state.correctChars / 5 / elapsed);
-            el.statRawWPM.textContent = Math.round(state.totalChars / 5 / elapsed);
-            el.statAccuracy.textContent = state.totalChars > 0 ? Math.round((state.correctChars / state.totalChars) * 100) + '%' : '100%';
-          }
-        }
-
-        // Check word complete
-        if (typed === target) {
-          state.wordsTyped++;
-          state.currentWord = getNextText();
-          el.wordInput.value = '';
-          el.wordText.textContent = state.currentWord;
-          displayWord();
-
-          // In word mode (no timer), end after N words
-          if (state.mode === 'word' && state.wordsTyped >= 20) {
-            endTest();
-          }
-        }
-      }
-
-      function updateStatsDisplay() {
-        el.statTests.textContent = state.stats.tests;
-        el.statBest.textContent = state.stats.bestWPM;
-      }
-
-      function renderHistory() {
-        if (state.history.length === 0) {
-          el.historySection.classList.remove('show');
-          return;
-        }
-        el.historySection.classList.add('show');
-        const html = state.history.map((e, i) => `
-          <div class="history-item">
-            <span>${new Date(e.date).toLocaleDateString()}</span>
-            <span><strong>${e.wpm}</strong> WPM</span>
-            <span>${e.accuracy}%</span>
-            <span>${e.mode === 'word' ? 'Words' : e.mode === 'code' ? 'Code' : e.mode === 'quotes' ? 'Quote' : e.time + 's'}</span>
-            <button onclick="deleteHistoryItem(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px" aria-label="Delete entry">×</button>
-          </div>
-        `).join('');
-        el.historyList.innerHTML = `
-          <div class="history-item"><span class="history-label">Date</span><span class="history-label">WPM</span><span class="history-label">Accuracy</span><span class="history-label">Mode</span><span class="history-label"></span></div>
-          ${html}
-        `;
-      }
-
-      window.deleteHistoryItem = function(i) {
-        state.history.splice(i, 1);
-        localStorage.setItem('typingHistory', JSON.stringify(state.history));
-        renderHistory();
-        showMessage('Entry deleted', 'info');
-      };
-
-      function clearHistory() {
-        if (confirm('Are you sure you want to clear all history?')) {
-          state.history = [];
-          localStorage.removeItem('typingHistory');
-          renderHistory();
-          showMessage('History cleared', 'info');
-        }
-      }
-
-      function resetGame() {
-        state.isRunning = false;
-        stopTimer();
-        el.wordInput.disabled = true;
-        el.wordInput.value = '';
-        el.wordText.textContent = 'Press Start to begin';
-        el.wordDisplay.classList.remove('correct', 'incorrect', 'coding');
-        el.wordInput.classList.remove('coding');
-        el.startBtn.disabled = false;
-        el.resetBtn.disabled = true;
-        el.difficulty.disabled = false;
-        showMessage('Game reset. Ready to start again!', 'info');
-      }
-
-      /* ============================================
-         Event Listeners
-         ============================================ */
-      el.themeToggle.addEventListener('click', toggleTheme);
-      el.difficulty.addEventListener('change', e => { state.difficulty = e.target.value; });
-
-      el.modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-          el.modeButtons.forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          state.mode = btn.dataset.mode;
-
-          el.timerGroup.style.display = (state.mode === 'time' || state.mode === 'code' || state.mode === 'quotes') ? 'flex' : 'none';
-          el.codeLanguageGroup.style.display = state.mode === 'code' ? 'flex' : 'none';
-
-          analytics.track('mode_changed', { mode: state.mode });
-        });
-      });
-
-      el.codeLanguage.addEventListener('change', e => { state.codeLanguage = e.target.value; });
-      el.timerDuration.addEventListener('change', e => { state.timerDuration = parseInt(e.target.value); });
-
-      el.startBtn.addEventListener('click', startTest);
-      el.resetBtn.addEventListener('click', resetGame);
-      el.wordInput.addEventListener('input', handleInput);
-
-      el.wordInput.addEventListener('keydown', e => {
-        if (e.key === 'Tab') {
-          e.preventDefault();
-          if (state.isRunning) {
-            state.wordsTyped++;
-            state.currentWord = getNextText();
-            el.wordInput.value = '';
-            el.wordText.textContent = state.currentWord;
-            displayWord();
-          }
-        }
-      });
-
-      el.historyBtn.addEventListener('click', () => {
-        renderHistory();
-        el.historySection.classList.toggle('show');
-      });
-
-      el.clearHistoryBtn.addEventListener('click', clearHistory);
-      el.modalCloseBtn.addEventListener('click', () => el.resultsModal.classList.remove('show'));
-      el.modalRestartBtn.addEventListener('click', () => { el.resultsModal.classList.remove('show'); startTest(); });
-      el.resultsModal.addEventListener('click', e => { if (e.target === el.resultsModal) el.resultsModal.classList.remove('show'); });
-
-      document.addEventListener('keydown', e => {
-        if (e.key === 'Escape' && el.resultsModal.classList.contains('show')) {
-          el.resultsModal.classList.remove('show');
-        }
-        if (e.key === ' ' && document.activeElement !== el.wordInput && !el.startBtn.disabled) {
-          e.preventDefault();
-          startTest();
-        }
-      });
-
-      /* ============================================
-         Init
-         ============================================ */
-      initTheme();
-      updateStatsDisplay();
-      renderHistory();
-    </script>
+    <script type="module" src="/src/main.js"></script>
   </body>
 </html>
