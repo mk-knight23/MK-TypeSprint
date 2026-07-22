@@ -5,6 +5,7 @@
  */
 import { el, showMessage } from './ui.js';
 import { read, write, remove, exportAll, STORAGE_KEYS } from './lib/storage.js';
+import { escapeHtml } from './sanitize.js';
 
 const HISTORY_LIMIT = 100;
 const DEFAULT_STATS = { tests: 0, bestWPM: 0 };
@@ -128,10 +129,10 @@ export function renderHistory() {
     .map(
       (e, i) => `
         <div class="history-item">
-          <span>${new Date(e.date).toLocaleDateString()}</span>
-          <span><strong>${e.wpm}</strong> WPM</span>
-          <span>${e.accuracy}%</span>
-          <span>${e.mode === 'word' ? 'Words' : e.mode === 'code' ? 'Code' : e.mode === 'quotes' ? 'Quote' : e.mode === 'weak' ? 'Weak Keys' : e.time + 's'}</span>
+          <span>${escapeHtml(new Date(e.date).toLocaleDateString())}</span>
+          <span><strong>${escapeHtml(Number(e.wpm) || 0)}</strong> WPM</span>
+          <span>${escapeHtml(Number(e.accuracy) || 0)}%</span>
+          <span>${e.mode === 'word' ? 'Words' : e.mode === 'code' ? 'Code' : e.mode === 'quotes' ? 'Quote' : e.mode === 'weak' ? 'Weak Keys' : escapeHtml(Number(e.time) || 0) + 's'}</span>
           <button onclick="deleteHistoryItem(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px" aria-label="Delete entry">×</button>
         </div>
       `

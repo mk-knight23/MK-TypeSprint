@@ -1,0 +1,89 @@
+/**
+ * HTML-escaping + payload-coercion helpers. Every string that reaches an
+ * innerHTML template MUST pass through escapeHtml; every imported record
+ * MUST be rebuilt from validated primitives (never spread raw).
+ */
+
+const HTML_ESCAPES = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+export function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch]);
+}
+
+const ALLOWED_MODES = new Set(['timed', 'word', 'code', 'quotes', 'weak', 'zen']);
+const ALLOWED_DIFFICULTIES = new Set(['easy', 'medium', 'hard']);
+
+export function toFiniteNumber(value, fallback = 0) {
+  try {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  } catch {
+    // Objects with poisoned toString/valueOf throw on coercion.
+    return fallback;
+  }
+}
+
+/**
+ * Rebuild a history entry from validated primitives. Returns null when the
+ * entry is not salvageable. Unknown fields are dropped by construction.
+ */
+export function sanitizeHistoryEntry(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const date = new Date(raw.date);
+  if (Number.isNaN(date.getTime())) return null;
+  const mode = ALLOWED_MODES.has(raw.mode) ? raw.mode : 'timed';
+  const difficulty = ALLOWED_DIFFICULTIES.has(raw.difficulty) ? raw.difficulty : 'easy';
+  return {
+    date: date.toISOString(),
+    wpm: toFiniteNumber(raw.wpm),
+    rawWPM: toFiniteNumber(raw.rawWPM),
+    accuracy: Math.max(0, Math.min(100, toFiniteNumber(raw.accuracy))),
+    time: toFiniteNumber(raw.time),
+    errors: toFiniteNumber(raw.errors),
+    mode,
+    difficulty,
+  };
+}
+
+/**
+ * Rebuild stats from validated numbers only.
+ */
+export function sanitizeStats(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { tests: 0, bestWPM: 0 };
+  return {
+    tests: Math.max(0, toFiniteNumber(raw.tests)),
+    bestWPM: Math.max(0, toFiniteNumber(raw.bestWPM)),
+  };
+}
+
+const MAX_KEY_LABEL_LENGTH = 12;
+
+/**
+ * Rebuild per-key stats: keys capped in length (still escaped at render),
+ * values coerced to finite numbers.
+ */
+export function sanitizePerKey(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const [key, value] of Object.entries(raw)) {
+    if (typeof key !== 'string' || key.length === 0 || key.length > MAX_KEY_LABEL_LENGTH) continue;
+    if (!value || typeof value !== 'object') continue;
+    const hits = Math.max(0, toFiniteNumber(value.hits));
+    const misses = Math.max(0, toFiniteNumber(value.misses));
+    const total = Math.max(0, toFiniteNumber(value.total, hits + misses));
+    out[key] = {
+      hits,
+      misses,
+      total,
+      // Fallback 0 (not 100): junk input must never display as perfect accuracy.
+      accuracy: Math.max(0, Math.min(100, toFiniteNumber(value.accuracy, 0))),
+    };
+  }
+  return out;
+}
