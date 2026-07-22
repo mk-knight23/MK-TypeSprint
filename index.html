@@ -1054,6 +1054,68 @@
       /* Page sections toggle */
       .page-section { display: none; }
       .page-section.active { display: block; }
+
+      /* ============================================
+         v2.4 — Heatmap, weak-key practice, data
+         controls, progress dashboard
+         ============================================ */
+      .history-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+      .weak-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); cursor: pointer; padding: 8px 0; }
+      .weak-toggle input { accent-color: var(--primary); width: 16px; height: 16px; cursor: pointer; }
+      .weak-key-info {
+        text-align: center;
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        background: var(--bg-surface-alt);
+        border: 1px dashed var(--border);
+      }
+
+      .heatmap-block { margin-top: 24px; }
+      .heatmap-block h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 4px; }
+      .keyboard-heatmap { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+      .heatmap-row { display: flex; gap: 6px; justify-content: center; }
+      .heatmap-key {
+        width: 34px;
+        height: 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: var(--font-mono, monospace);
+        background: var(--bg-surface-alt);
+        color: var(--text-muted);
+        cursor: default;
+        user-select: none;
+      }
+      .heatmap-space { width: 190px; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .heatmap-empty { opacity: 0.55; }
+      .heatmap-hint { margin-top: 10px; font-size: 12px; color: var(--text-muted); text-align: center; }
+
+      .progress-dashboard { display: none; margin-top: 24px; }
+      .progress-dashboard.show { display: block; }
+      .dash-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+      .dash-header h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.02em; }
+      .dash-sub { font-size: 12px; color: var(--text-muted); }
+      .spark { width: 100%; height: 48px; display: block; margin-top: 8px; }
+      .dash-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+      .dash-records { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+      .dash-record { text-align: center; padding: 12px 8px; border-radius: 8px; background: var(--bg-surface-alt); }
+      .dash-value { display: block; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+      .dash-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+      @media (max-width: 640px) {
+        .heatmap-key { width: 26px; height: 26px; font-size: 10px; }
+        .heatmap-space { width: 130px; }
+        .heatmap-row { gap: 4px; }
+        .history-actions { width: 100%; }
+      }
     </style>
   </head>
 
@@ -1143,7 +1205,12 @@
                 <button class="btn-option" data-mode="time" aria-label="Timed mode">Timer</button>
                 <button class="btn-option" data-mode="code" aria-label="Code mode">Code</button>
                 <button class="btn-option" data-mode="quotes" aria-label="Quotes mode">Quotes</button>
+                <button class="btn-option" data-mode="weak" aria-label="Weak keys practice mode">Weak Keys</button>
               </div>
+            </div>
+            <div class="setting-group" id="weakKeyGroup" style="display:none">
+              <label class="setting-label" for="weakKeyToggle">Weak-key targeting</label>
+              <label class="weak-toggle"><input type="checkbox" id="weakKeyToggle" checked /> <span>Target weakest keys</span></label>
             </div>
             <div class="setting-group" id="timerGroup" style="display:none">
               <label class="setting-label" for="timerDuration">Duration</label>
@@ -1164,6 +1231,9 @@
               </select>
             </div>
           </div>
+
+          <!-- Weak-key practice explainer -->
+          <div id="weakKeyInfo" class="weak-key-info" style="display:none" aria-live="polite"></div>
 
           <!-- Timer -->
           <div class="timer-display" id="timerDisplay">Time: <span id="timerValue">60</span>s</div>
@@ -1202,7 +1272,13 @@
         <div class="history-section" id="historySection">
           <div class="history-header">
             <h3>Test History</h3>
-            <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 16px;font-size:12px">Clear All</button>
+            <div class="history-actions">
+              <button class="btn btn-secondary" id="exportDataBtn" style="padding:8px 16px;font-size:12px">Export JSON</button>
+              <button class="btn btn-secondary" id="importDataBtn" style="padding:8px 16px;font-size:12px">Import JSON</button>
+              <button class="btn btn-secondary" id="clearHistoryBtn" style="padding:8px 16px;font-size:12px">Clear All</button>
+              <button class="btn btn-secondary" id="deleteAllDataBtn" style="padding:8px 16px;font-size:12px;color:#ef4444">Delete All Data</button>
+              <input type="file" id="importFileInput" accept="application/json,.json" style="display:none" aria-label="Import TypeSprint data file" />
+            </div>
           </div>
           <div class="history-list" id="historyList">
             <div class="history-item">
@@ -1212,6 +1288,16 @@
               <span class="history-label">Mode</span>
               <span class="history-label"></span>
             </div>
+          </div>
+
+          <!-- Progress dashboard (records + WPM trend) -->
+          <div class="progress-dashboard" id="progressDashboard"></div>
+
+          <!-- Per-key accuracy heatmap -->
+          <div class="heatmap-block">
+            <h3>Key Accuracy Heatmap</h3>
+            <div id="keyboardHeatmap" class="keyboard-heatmap"></div>
+            <p class="heatmap-hint" id="heatmapHint"></p>
           </div>
         </div>
 

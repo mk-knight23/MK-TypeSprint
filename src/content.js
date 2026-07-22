@@ -455,3 +455,45 @@ export function getNextText(settings, rng = Math.random) {
       return getRandomWord(settings.difficulty, rng);
   }
 }
+
+/* ============================================
+   Weak-key practice generation
+   ============================================ */
+
+/** Probability that a practice word is drawn from the weak-key pool. */
+export const WEAK_POOL_PROBABILITY = 0.75;
+
+/**
+ * Pick one practice word biased toward the user's weakest keys: with
+ * WEAK_POOL_PROBABILITY the word is drawn from the subset of the bank that
+ * contains at least one weak key; otherwise (or when no word matches) from
+ * the full bank. Deterministic for a seeded rng.
+ * @param {string[]} weakKeys — single lowercase characters
+ * @param {'easy'|'medium'|'hard'} difficulty
+ * @param {() => number} [rng]
+ */
+export function getWeakKeyWord(weakKeys, difficulty, rng = Math.random) {
+  const bank = wordBanks[difficulty] || wordBanks.medium;
+  const keys = Array.isArray(weakKeys)
+    ? weakKeys.map((k) => String(k).toLowerCase()).filter((k) => k.length === 1)
+    : [];
+  const pool = keys.length ? bank.filter((w) => keys.some((k) => w.includes(k))) : [];
+  if (pool.length > 0 && rng() < WEAK_POOL_PROBABILITY) return pick(pool, rng);
+  return pick(bank, rng);
+}
+
+/**
+ * Generate a full practice text of `wordCount` words biased toward weak keys.
+ * @param {string[]} weakKeys
+ * @param {{ difficulty?: string, wordCount?: number, rng?: () => number }} [opts]
+ */
+export function generateWeakKeyText(weakKeys, opts = {}) {
+  const difficulty = opts.difficulty ?? 'medium';
+  const wordCount = opts.wordCount ?? 20;
+  const rng = opts.rng ?? Math.random;
+  const words = [];
+  for (let i = 0; i < wordCount; i++) {
+    words.push(getWeakKeyWord(weakKeys, difficulty, rng));
+  }
+  return words.join(' ');
+}

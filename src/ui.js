@@ -44,6 +44,17 @@ export function initElements() {
     modalRestartBtn: document.getElementById('modalRestartBtn'),
     modalPersonalBest: document.getElementById('modalPersonalBest'),
     gameArea: document.getElementById('gameArea'),
+    // v2.4 — weak-key practice, heatmap, data controls, dashboard
+    weakKeyGroup: document.getElementById('weakKeyGroup'),
+    weakKeyToggle: document.getElementById('weakKeyToggle'),
+    weakKeyInfo: document.getElementById('weakKeyInfo'),
+    keyboardHeatmap: document.getElementById('keyboardHeatmap'),
+    heatmapHint: document.getElementById('heatmapHint'),
+    exportDataBtn: document.getElementById('exportDataBtn'),
+    importDataBtn: document.getElementById('importDataBtn'),
+    importFileInput: document.getElementById('importFileInput'),
+    deleteAllDataBtn: document.getElementById('deleteAllDataBtn'),
+    progressDashboard: document.getElementById('progressDashboard'),
   });
 }
 

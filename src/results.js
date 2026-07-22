@@ -13,6 +13,8 @@ import {
   renderHistory,
 } from './history.js';
 import { state, stopTimer } from './session.js';
+import { recordSessionPerKey, renderHeatmap } from './heatmap.js';
+import { renderDashboard } from './dashboard.js';
 
 export function endTest() {
   state.isRunning = false;
@@ -49,6 +51,11 @@ export function endTest() {
 
   updateStatsDisplay();
   renderHistory();
+
+  // Aggregate this session's per-key stats and refresh the visualizations.
+  recordSessionPerKey(summary.perKey);
+  renderHeatmap();
+  renderDashboard();
 
   // Modal
   el.modalWPM.textContent = summary.netWpm;

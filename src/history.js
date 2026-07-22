@@ -131,7 +131,7 @@ export function renderHistory() {
           <span>${new Date(e.date).toLocaleDateString()}</span>
           <span><strong>${e.wpm}</strong> WPM</span>
           <span>${e.accuracy}%</span>
-          <span>${e.mode === 'word' ? 'Words' : e.mode === 'code' ? 'Code' : e.mode === 'quotes' ? 'Quote' : e.time + 's'}</span>
+          <span>${e.mode === 'word' ? 'Words' : e.mode === 'code' ? 'Code' : e.mode === 'quotes' ? 'Quote' : e.mode === 'weak' ? 'Weak Keys' : e.time + 's'}</span>
           <button onclick="deleteHistoryItem(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px" aria-label="Delete entry">×</button>
         </div>
       `

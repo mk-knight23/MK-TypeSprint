@@ -211,3 +211,139 @@ describe('boot-time migration and rendering', () => {
     expect(JSON.parse(localStorage.getItem('typesprint:v1:theme'))).toBe('dark');
   });
 });
+
+describe('keyboard heatmap (feature 2)', () => {
+  it('aggregates per-key data after a session and colors the grid', async () => {
+    const { state } = await bootApp();
+    const input = document.getElementById('wordInput');
+    const counters = { total: 0, correct: 0, errors: 0 };
+    const type = makeTyper(input, counters);
+
+    document.getElementById('startBtn').click();
+    for (let w = 0; w < 20; w++) {
+      const word = state.currentWord;
+      for (let i = 1; i <= word.length; i++) type(word.slice(0, i), word);
+    }
+
+    const stored = JSON.parse(localStorage.getItem('typesprint:v1:perKey'));
+    expect(stored).toBeTruthy();
+    expect(Object.keys(stored).length).toBeGreaterThan(0);
+    // Every recorded key was typed correctly in this clean run.
+    for (const stat of Object.values(stored)) {
+      expect(stat.accuracy).toBe(100);
+      expect(stat.misses).toBe(0);
+    }
+
+    // The rendered grid has colored keys with count tooltips.
+    const colored = document.querySelectorAll('#keyboardHeatmap .heatmap-key:not(.heatmap-empty)');
+    expect(colored.length).toBeGreaterThan(0);
+    expect(colored[0].getAttribute('title')).toMatch(/% accuracy \(\d+ hit \/ \d+ miss\)/);
+    expect(colored[0].getAttribute('style')).toContain('hsl');
+  });
+});
+
+describe('weak-key practice mode (feature 3)', () => {
+  it('explains the recommendation and serves words containing weak keys', async () => {
+    // Seed an aggregate where q and z are clearly weakest.
+    const seed = {};
+    for (const k of 'aeionrst') seed[k] = { hits: 20, misses: 0, total: 20, accuracy: 100 };
+    seed.q = { hits: 1, misses: 9, total: 10, accuracy: 10 };
+    seed.z = { hits: 2, misses: 8, total: 10, accuracy: 20 };
+    localStorage.setItem('typesprint:v1:perKey', JSON.stringify(seed));
+
+    const { state } = await bootApp();
+    document.querySelector('.btn-option[data-mode="weak"]').click();
+    expect(state.mode).toBe('weak');
+    expect(document.getElementById('weakKeyInfo').textContent).toContain('Practicing: q, z');
+
+    document.getElementById('startBtn').click();
+    expect(state.isRunning).toBe(true);
+    // Draw a batch of practice words: most must contain a weak key.
+    const words = [];
+    for (let i = 0; i < 40; i++) {
+      words.push(state.currentWord);
+      const e = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      document.getElementById('wordInput').dispatchEvent(e); // Tab-skip to next word
+    }
+    const weakRate = words.filter((w) => w.includes('q') || w.includes('z')).length / words.length;
+    expect(weakRate).toBeGreaterThan(0.4);
+  });
+
+  it('falls back to regular words and says so when data is insufficient', async () => {
+    const { state } = await bootApp();
+    document.querySelector('.btn-option[data-mode="weak"]').click();
+    expect(document.getElementById('weakKeyInfo').textContent).toContain('Not enough per-key data');
+
+    document.getElementById('startBtn').click();
+    expect(typeof state.currentWord).toBe('string');
+    expect(state.currentWord.length).toBeGreaterThan(0);
+  });
+
+  it('respects the disable toggle', async () => {
+    localStorage.setItem(
+      'typesprint:v1:perKey',
+      JSON.stringify({ q: { hits: 0, misses: 10, total: 10, accuracy: 0 } })
+    );
+    await bootApp();
+    document.querySelector('.btn-option[data-mode="weak"]').click();
+    const toggle = document.getElementById('weakKeyToggle');
+    toggle.checked = false;
+    toggle.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(document.getElementById('weakKeyInfo').textContent).toContain('targeting is off');
+  });
+});
+
+describe('data controls (feature 4)', () => {
+  it('delete-all wipes namespaced and legacy keys after confirm', async () => {
+    localStorage.setItem('typingHistory', JSON.stringify([{ wpm: 50 }]));
+    localStorage.setItem('typingStats', JSON.stringify({ tests: 2, bestWPM: 50 }));
+    await bootApp(); // migration populates typesprint:v1:* keys
+    expect(localStorage.getItem('typesprint:v1:history')).not.toBeNull();
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    document.getElementById('deleteAllDataBtn').click();
+
+    expect(localStorage.getItem('typesprint:v1:history')).toBeNull();
+    expect(localStorage.getItem('typesprint:v1:stats')).toBeNull();
+    expect(localStorage.getItem('typingHistory')).toBeNull();
+    expect(localStorage.getItem('typingStats')).toBeNull();
+    expect(document.getElementById('statTests').textContent).toBe('0');
+    expect(document.getElementById('statBest').textContent).toBe('0');
+  });
+
+  it('delete-all is a no-op when the confirm is declined', async () => {
+    localStorage.setItem('typingHistory', JSON.stringify([{ wpm: 50 }]));
+    await bootApp();
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+    document.getElementById('deleteAllDataBtn').click();
+    expect(localStorage.getItem('typesprint:v1:history')).not.toBeNull();
+  });
+});
+
+describe('progress dashboard (feature 5)', () => {
+  it('renders records, practice minutes, and a WPM sparkline from real history', async () => {
+    const mkEntry = (wpm, accuracy, time) => ({
+      date: '2026-07-10T10:00:00.000Z',
+      wpm,
+      rawWPM: wpm + 4,
+      accuracy,
+      time,
+      errors: 2,
+      mode: 'word',
+      difficulty: 'medium',
+    });
+    localStorage.setItem(
+      'typingHistory',
+      JSON.stringify([mkEntry(70, 96, 60), mkEntry(65, 92, 90), mkEntry(60, 90, 30)])
+    );
+    localStorage.setItem('typingStats', JSON.stringify({ tests: 3, bestWPM: 70 }));
+
+    await bootApp();
+
+    const dash = document.getElementById('progressDashboard');
+    expect(dash.classList.contains('show')).toBe(true);
+    expect(dash.querySelector('svg.spark polyline').getAttribute('points')).toBeTruthy();
+    const values = [...dash.querySelectorAll('.dash-value')].map((n) => n.textContent);
+    expect(values).toEqual(['70', '96%', '3', '3']); // best WPM, best acc, tests, minutes
+  });
+});

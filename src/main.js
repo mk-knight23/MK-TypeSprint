@@ -11,8 +11,14 @@ import {
   handleInput,
   handleWordInputKeydown,
   setTestEndHandler,
+  setNextTextProvider,
   isTimedMode,
 } from './session.js';
+import { getNextText } from './content.js';
+import { getWeakPracticeWord, updateWeakKeyExplainer } from './practice.js';
+import { renderHeatmap } from './heatmap.js';
+import { renderDashboard } from './dashboard.js';
+import { initDataControls } from './data-controls.js';
 import { endTest } from './results.js';
 import {
   migrateLegacyData,
@@ -32,9 +38,24 @@ migrateLegacyData();
 loadPersistedData();
 setTestEndHandler(endTest);
 
+// Text provider: weak-key practice mode gets biased words; everything else
+// keeps the original word/timer/code/quotes routing.
+setNextTextProvider(() =>
+  state.mode === 'weak'
+    ? getWeakPracticeWord(state.difficulty)
+    : getNextText({
+        mode: state.mode,
+        difficulty: state.difficulty,
+        codeLanguage: state.codeLanguage,
+      })
+);
+
 // Inline onclick handlers in the markup rely on these globals.
 window.showSection = showSection;
-window.deleteHistoryItem = deleteHistoryItem;
+window.deleteHistoryItem = (i) => {
+  deleteHistoryItem(i);
+  renderDashboard();
+};
 
 /* ============================================
    Event Listeners
@@ -54,9 +75,22 @@ el.modeButtons.forEach((btn) => {
     el.codeLanguageGroup.style.display =
       state.mode === 'code' ? 'flex' : 'none';
 
+    // Weak-key practice controls
+    const isWeak = state.mode === 'weak';
+    if (el.weakKeyGroup) el.weakKeyGroup.style.display = isWeak ? 'flex' : 'none';
+    if (el.weakKeyInfo) el.weakKeyInfo.style.display = isWeak ? 'block' : 'none';
+    if (isWeak) updateWeakKeyExplainer();
+
     track('mode_changed', { mode: state.mode });
   });
 });
+
+if (el.weakKeyToggle) {
+  el.weakKeyToggle.addEventListener('change', () => {
+    updateWeakKeyExplainer();
+    track('weak_key_toggle', { enabled: el.weakKeyToggle.checked });
+  });
+}
 
 el.codeLanguage.addEventListener('change', (e) => {
   state.codeLanguage = e.target.value;
@@ -75,7 +109,10 @@ el.historyBtn.addEventListener('click', () => {
   el.historySection.classList.toggle('show');
 });
 
-el.clearHistoryBtn.addEventListener('click', clearHistory);
+el.clearHistoryBtn.addEventListener('click', () => {
+  clearHistory();
+  renderDashboard();
+});
 el.modalCloseBtn.addEventListener('click', () =>
   el.resultsModal.classList.remove('show')
 );
@@ -104,6 +141,9 @@ document.addEventListener('keydown', (e) => {
 /* ============================================
    Init
    ============================================ */
+initDataControls();
 initTheme();
 updateStatsDisplay();
 renderHistory();
+renderHeatmap();
+renderDashboard();
