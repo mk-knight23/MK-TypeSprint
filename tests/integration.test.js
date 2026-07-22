@@ -184,6 +184,107 @@ describe('full app boot + word-mode session (parity with original)', () => {
   });
 });
 
+describe('results modal focus management (a11y wave-2)', () => {
+  async function completeWordTest() {
+    const { state } = await bootApp();
+    const input = document.getElementById('wordInput');
+    const counters = { total: 0, correct: 0, errors: 0 };
+    const type = makeTyper(input, counters);
+    document.getElementById('startBtn').click();
+    for (let w = 0; w < 20; w++) {
+      const word = state.currentWord;
+      for (let i = 1; i <= word.length; i++) type(word.slice(0, i), word);
+    }
+    return state;
+  }
+
+  it('focuses Try Again on open and returns focus to Start on Escape', async () => {
+    await completeWordTest();
+    const modal = document.getElementById('resultsModal');
+    expect(modal.classList.contains('show')).toBe(true);
+    expect(document.activeElement).toBe(
+      document.getElementById('modalRestartBtn')
+    );
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(modal.classList.contains('show')).toBe(false);
+    expect(document.activeElement).toBe(document.getElementById('startBtn'));
+  });
+
+  it('traps Tab focus within the dialog', async () => {
+    await completeWordTest();
+    const closeBtn = document.getElementById('modalCloseBtn');
+    const restartBtn = document.getElementById('modalRestartBtn');
+
+    // Focus starts on Try Again (the last focusable). Tab wraps to the first.
+    expect(document.activeElement).toBe(restartBtn);
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Tab',
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Shift+Tab off the first focusable wraps back to the last.
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Tab',
+        shiftKey: true,
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(document.activeElement).toBe(restartBtn);
+  });
+});
+
+describe('keyboard accessibility guards (a11y wave-2)', () => {
+  it('Space starts a test only when focus is on the body, not on a control', async () => {
+    const { state } = await bootApp();
+
+    // Focus a control (the theme toggle): Space must NOT hijack activation.
+    document.getElementById('themeToggle').focus();
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+    );
+    expect(state.isRunning).toBe(false);
+
+    // Focus on body (nothing interactive focused): Space starts the test.
+    document.getElementById('themeToggle').blur();
+    expect(document.activeElement).toBe(document.body);
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+    );
+    expect(state.isRunning).toBe(true);
+  });
+
+  it('Escape aborts a running test and returns focus to the Start button', async () => {
+    const { state } = await bootApp();
+
+    document.getElementById('startBtn').click();
+    expect(state.isRunning).toBe(true);
+    expect(document.activeElement).toBe(document.getElementById('wordInput'));
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(state.isRunning).toBe(false);
+    expect(document.activeElement).toBe(document.getElementById('startBtn'));
+  });
+});
+
 describe('boot-time migration and rendering', () => {
   it('migrates legacy typingHistory/typingStats/theme and renders them', async () => {
     const legacyEntry = {

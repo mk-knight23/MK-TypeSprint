@@ -152,7 +152,9 @@
 
         --text-primary: #0f172a;
         --text-secondary: #475569;
-        --text-muted: #94a3b8;
+        /* a11y: darkened from #94a3b8 (2.18:1) to clear WCAG AA 4.5:1 —
+           4.63:1 on the page bg, ~4.85-4.98:1 on the glass surfaces. */
+        --text-muted: #5b6b80;
         --text-inverse: #ffffff;
 
         --border: rgba(255, 255, 255, 0.35);
@@ -196,7 +198,10 @@
 
         --text-primary: #f1f5f9;
         --text-secondary: #94a3b8;
-        --text-muted: #64748b;
+        /* a11y: lightened from #64748b (3.43:1 worst) to clear WCAG AA 4.5:1 —
+           6.25:1 on the page bg, ~5.46-5.76:1 on the glass surfaces. Kept
+           below --text-secondary so the muted/secondary hierarchy survives. */
+        --text-muted: #8b96a9;
         --text-inverse: #0f172a;
 
         --border: rgba(255, 255, 255, 0.08);

@@ -15,11 +15,12 @@ import {
   isTimedMode,
 } from './session.js';
 import { getNextText } from './content.js';
+import { shouldStartOnSpace, shouldAbortOnEscape } from './keyboard.js';
 import { getWeakPracticeWord, updateWeakKeyExplainer } from './practice.js';
 import { renderHeatmap } from './heatmap.js';
 import { renderDashboard } from './dashboard.js';
 import { initDataControls } from './data-controls.js';
-import { endTest } from './results.js';
+import { endTest, hideResultsModal } from './results.js';
 import {
   migrateLegacyData,
   loadPersistedData,
@@ -115,25 +116,37 @@ el.clearHistoryBtn.addEventListener('click', () => {
   clearHistory();
   renderDashboard();
 });
-el.modalCloseBtn.addEventListener('click', () =>
-  el.resultsModal.classList.remove('show')
-);
+el.modalCloseBtn.addEventListener('click', () => hideResultsModal());
 el.modalRestartBtn.addEventListener('click', () => {
-  el.resultsModal.classList.remove('show');
+  hideResultsModal();
   startTest();
 });
 el.resultsModal.addEventListener('click', (e) => {
-  if (e.target === el.resultsModal) el.resultsModal.classList.remove('show');
+  if (e.target === el.resultsModal) hideResultsModal();
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && el.resultsModal.classList.contains('show')) {
-    el.resultsModal.classList.remove('show');
+  if (e.key === 'Escape') {
+    // Priority 1: close the results modal if it is open.
+    if (el.resultsModal.classList.contains('show')) {
+      hideResultsModal();
+      return;
+    }
+    // Priority 2: abort a running test so keyboard users are never trapped
+    // inside the typing input (WCAG 2.1.2).
+    if (shouldAbortOnEscape(e.key, state.isRunning)) {
+      resetGame();
+      return;
+    }
   }
+  // Space starts a test only when no control/input is focused (WCAG 2.1.1).
   if (
-    e.key === ' ' &&
-    document.activeElement !== el.wordInput &&
-    !el.startBtn.disabled
+    shouldStartOnSpace({
+      key: e.key,
+      activeElement: document.activeElement,
+      body: document.body,
+      startDisabled: el.startBtn.disabled,
+    })
   ) {
     e.preventDefault();
     startTest();

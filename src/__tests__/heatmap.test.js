@@ -4,9 +4,38 @@ import {
   normalizeKey,
   loadPerKeyStats,
   recordSessionPerKey,
+  heatLabelColor,
   QWERTY_ROWS,
 } from '../heatmap.js';
 import { STORAGE_KEYS } from '../lib/storage.js';
+
+// Independent WCAG contrast helpers (mirror the heat scale hsl(h,72%,42%)).
+const lin = (c) => {
+  const s = c / 255;
+  return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+};
+const luminance = ({ r, g, b }) =>
+  0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+const hexLum = (hex) =>
+  luminance({
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16),
+  });
+const hslToRgb = (h, s, l) => {
+  s /= 100;
+  l /= 100;
+  const k = (n) => (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1));
+  return {
+    r: Math.round(255 * f(0)),
+    g: Math.round(255 * f(8)),
+    b: Math.round(255 * f(4)),
+  };
+};
+const contrast = (l1, l2) =>
+  (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 
 beforeEach(() => {
   localStorage.clear();
@@ -77,6 +106,29 @@ describe('recordSessionPerKey / loadPerKeyStats', () => {
       JSON.stringify([1, 2])
     );
     expect(loadPerKeyStats()).toEqual({});
+  });
+});
+
+describe('heatLabelColor — legible key labels (WCAG AA, fixes TS-5)', () => {
+  it('always meets >= 4.5:1 against the key background across the whole scale', () => {
+    let worst = Infinity;
+    for (let acc = 0; acc <= 100; acc += 1) {
+      const hue = Math.max(0, Math.min(120, Math.round((acc / 100) * 120)));
+      const bgLum = luminance(hslToRgb(hue, 72, 42));
+      const label = heatLabelColor(acc);
+      const ratio = contrast(hexLum(label), bgLum);
+      worst = Math.min(worst, ratio);
+      expect(ratio).toBeGreaterThanOrEqual(4.5);
+    }
+    // The pre-fix fixed-white label bottomed out at ~2.12:1; the optimal
+    // black/white choice cannot dip below the ~4.58:1 crossover floor.
+    expect(worst).toBeGreaterThan(4.5);
+  });
+
+  it('uses white on the dark low-accuracy (red) end and black at the bright mid', () => {
+    expect(heatLabelColor(0)).toBe('#ffffff'); // hue 0, dark red
+    expect(heatLabelColor(50)).toBe('#000000'); // hue 60, bright yellow
+    expect(heatLabelColor(100)).toBe('#000000'); // hue 120, bright green
   });
 });
 
