@@ -46,7 +46,12 @@ describe('mergePerKeyStats', () => {
     const aggregate = { a: { hits: 1, misses: 0, total: 1, accuracy: 100 } };
     const session = { a: { hits: 0, misses: 1, total: 1, accuracy: 0 } };
     mergePerKeyStats(aggregate, session);
-    expect(aggregate.a).toEqual({ hits: 1, misses: 0, total: 1, accuracy: 100 });
+    expect(aggregate.a).toEqual({
+      hits: 1,
+      misses: 0,
+      total: 1,
+      accuracy: 100,
+    });
     expect(session.a).toEqual({ hits: 0, misses: 1, total: 1, accuracy: 0 });
   });
 });
@@ -67,7 +72,10 @@ describe('recordSessionPerKey / loadPerKeyStats', () => {
 
   it('returns an empty object for missing or corrupt stored data', () => {
     expect(loadPerKeyStats()).toEqual({});
-    localStorage.setItem('typesprint:v1:' + STORAGE_KEYS.PER_KEY, JSON.stringify([1, 2]));
+    localStorage.setItem(
+      'typesprint:v1:' + STORAGE_KEYS.PER_KEY,
+      JSON.stringify([1, 2])
+    );
     expect(loadPerKeyStats()).toEqual({});
   });
 });
@@ -75,7 +83,8 @@ describe('recordSessionPerKey / loadPerKeyStats', () => {
 describe('QWERTY layout', () => {
   it('covers all 26 letters plus digits and space', () => {
     const keys = QWERTY_ROWS.flat();
-    for (const letter of 'abcdefghijklmnopqrstuvwxyz') expect(keys).toContain(letter);
+    for (const letter of 'abcdefghijklmnopqrstuvwxyz')
+      expect(keys).toContain(letter);
     for (const digit of '1234567890') expect(keys).toContain(digit);
     expect(keys).toContain(' ');
   });

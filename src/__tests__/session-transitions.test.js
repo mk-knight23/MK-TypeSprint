@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { computeInputDelta, extractKeystroke, isTimedMode, WORD_MODE_TARGET } from '../session.js';
+import {
+  computeInputDelta,
+  extractKeystroke,
+  isTimedMode,
+  WORD_MODE_TARGET,
+} from '../session.js';
 
 describe('computeInputDelta — parity with original inline logic', () => {
   it('counts a correct char', () => {
@@ -48,11 +53,17 @@ describe('computeInputDelta — parity with original inline logic', () => {
 
 describe('extractKeystroke', () => {
   it('records a forward correct keystroke keyed by the target char', () => {
-    expect(extractKeystroke('ca', 'cat', 1)).toEqual({ key: 'a', correct: true });
+    expect(extractKeystroke('ca', 'cat', 1)).toEqual({
+      key: 'a',
+      correct: true,
+    });
   });
 
   it('records a forward incorrect keystroke keyed by the target char', () => {
-    expect(extractKeystroke('cx', 'cat', 1)).toEqual({ key: 'a', correct: false });
+    expect(extractKeystroke('cx', 'cat', 1)).toEqual({
+      key: 'a',
+      correct: false,
+    });
   });
 
   it('ignores backspaces', () => {

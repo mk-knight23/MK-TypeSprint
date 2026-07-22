@@ -22,7 +22,8 @@ export function getCurrentWeakKeys() {
   const perKey = loadPerKeyStats();
   const letterStats = {};
   for (const [key, stat] of Object.entries(perKey)) {
-    if (/^[a-z]$/.test(key) && stat && stat.accuracy < 100) letterStats[key] = stat;
+    if (/^[a-z]$/.test(key) && stat && stat.accuracy < 100)
+      letterStats[key] = stat;
   }
   return findWeakestKeys(letterStats, {
     topN: WEAK_KEY_COUNT,

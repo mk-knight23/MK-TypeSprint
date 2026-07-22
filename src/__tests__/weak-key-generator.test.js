@@ -44,8 +44,16 @@ describe('getWeakKeyWord', () => {
 
 describe('generateWeakKeyText — deterministic, elevated weak-key frequency', () => {
   it('is fully deterministic for the same seed', () => {
-    const a = generateWeakKeyText(WEAK, { difficulty: 'hard', wordCount: 30, rng: mulberry32(42) });
-    const b = generateWeakKeyText(WEAK, { difficulty: 'hard', wordCount: 30, rng: mulberry32(42) });
+    const a = generateWeakKeyText(WEAK, {
+      difficulty: 'hard',
+      wordCount: 30,
+      rng: mulberry32(42),
+    });
+    const b = generateWeakKeyText(WEAK, {
+      difficulty: 'hard',
+      wordCount: 30,
+      rng: mulberry32(42),
+    });
     expect(a).toBe(b);
     expect(a.split(' ')).toHaveLength(30);
   });
@@ -70,13 +78,15 @@ describe('generateWeakKeyText — deterministic, elevated weak-key frequency', (
   it('boosts single seeded weak keys in the medium bank too', () => {
     const weak = ['x'];
     const bank = wordBanks.medium;
-    const baselineRate = bank.filter((w) => w.includes('x')).length / bank.length;
+    const baselineRate =
+      bank.filter((w) => w.includes('x')).length / bank.length;
     const words = generateWeakKeyText(weak, {
       difficulty: 'medium',
       wordCount: 200,
       rng: mulberry32(11),
     }).split(' ');
-    const generatedRate = words.filter((w) => w.includes('x')).length / words.length;
+    const generatedRate =
+      words.filter((w) => w.includes('x')).length / words.length;
     expect(generatedRate).toBeGreaterThan(baselineRate);
     expect(generatedRate).toBeGreaterThan(0.5);
   });

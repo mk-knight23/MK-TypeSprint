@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { migrateLegacyData, loadPersistedData, getHistory, getStats, LEGACY_KEYS } from '../history.js';
+import {
+  migrateLegacyData,
+  loadPersistedData,
+  getHistory,
+  getStats,
+  LEGACY_KEYS,
+} from '../history.js';
 import { read, STORAGE_KEYS } from '../lib/storage.js';
 
 const SAMPLE_HISTORY = [
@@ -44,7 +50,10 @@ describe('migrateLegacyData', () => {
   });
 
   it('never overwrites existing namespaced data', () => {
-    localStorage.setItem(LEGACY_KEYS.STATS, JSON.stringify({ tests: 1, bestWPM: 10 }));
+    localStorage.setItem(
+      LEGACY_KEYS.STATS,
+      JSON.stringify({ tests: 1, bestWPM: 10 })
+    );
     // Namespaced value already present (written by the new storage layer).
     localStorage.setItem(
       'typesprint:v1:' + STORAGE_KEYS.STATS,
@@ -89,8 +98,14 @@ describe('loadPersistedData', () => {
   });
 
   it('falls back to defaults for corrupt stored shapes', () => {
-    localStorage.setItem('typesprint:v1:' + STORAGE_KEYS.HISTORY, JSON.stringify('nope'));
-    localStorage.setItem('typesprint:v1:' + STORAGE_KEYS.STATS, JSON.stringify(null));
+    localStorage.setItem(
+      'typesprint:v1:' + STORAGE_KEYS.HISTORY,
+      JSON.stringify('nope')
+    );
+    localStorage.setItem(
+      'typesprint:v1:' + STORAGE_KEYS.STATS,
+      JSON.stringify(null)
+    );
     loadPersistedData();
     expect(getHistory()).toEqual([]);
     expect(getStats()).toEqual({ tests: 0, bestWPM: 0 });

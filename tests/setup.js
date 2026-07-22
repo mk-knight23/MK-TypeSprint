@@ -49,6 +49,7 @@ if (typeof window !== 'undefined' && typeof window.matchMedia === 'undefined') {
 if (typeof window !== 'undefined') {
   window.scrollTo = () => {};
   if (typeof Element !== 'undefined') {
-    Element.prototype.scrollIntoView = Element.prototype.scrollIntoView || (() => {});
+    Element.prototype.scrollIntoView =
+      Element.prototype.scrollIntoView || (() => {});
   }
 }
