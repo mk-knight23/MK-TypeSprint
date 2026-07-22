@@ -15,6 +15,27 @@ import {
 import { state, stopTimer } from './session.js';
 import { recordSessionPerKey, renderHeatmap } from './heatmap.js';
 import { renderDashboard } from './dashboard.js';
+import { activateFocusTrap, deactivateFocusTrap } from './lib/focus-trap.js';
+
+/**
+ * Open the results modal with full focus management (WCAG 2.4.3): move focus
+ * onto the primary action and trap Tab within the dialog. The markup already
+ * carries role="dialog" + aria-modal="true".
+ */
+export function showResultsModal() {
+  el.resultsModal.classList.add('show');
+  el.modalRestartBtn.focus();
+  activateFocusTrap(el.resultsModal);
+}
+
+/** Close the results modal, release the trap, and return focus to Start. */
+export function hideResultsModal() {
+  deactivateFocusTrap();
+  el.resultsModal.classList.remove('show');
+  if (el.startBtn && typeof el.startBtn.focus === 'function') {
+    el.startBtn.focus();
+  }
+}
 
 export function endTest() {
   state.isRunning = false;
@@ -57,18 +78,21 @@ export function endTest() {
   renderHeatmap();
   renderDashboard();
 
-  // Modal
+  // Modal content
   el.modalWPM.textContent = summary.netWpm;
   el.modalRawWPM.textContent = summary.rawWpm;
   el.modalAccuracy.textContent = summary.accuracy + '%';
   el.modalErrors.textContent = state.errors;
   el.modalPersonalBest.classList.toggle('show', isPersonalBest);
-  el.resultsModal.classList.add('show');
 
   el.wordInput.disabled = true;
   el.startBtn.disabled = false;
   el.resetBtn.disabled = true;
   el.difficulty.disabled = false;
+
+  // Show with focus management (focus Try Again, trap Tab, return focus on
+  // close). Done after the buttons are re-enabled so focus lands correctly.
+  showResultsModal();
 
   track('test_completed', {
     mode: state.mode,

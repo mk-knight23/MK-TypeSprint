@@ -20,7 +20,7 @@ import { getWeakPracticeWord, updateWeakKeyExplainer } from './practice.js';
 import { renderHeatmap } from './heatmap.js';
 import { renderDashboard } from './dashboard.js';
 import { initDataControls } from './data-controls.js';
-import { endTest } from './results.js';
+import { endTest, hideResultsModal } from './results.js';
 import {
   migrateLegacyData,
   loadPersistedData,
@@ -116,22 +116,20 @@ el.clearHistoryBtn.addEventListener('click', () => {
   clearHistory();
   renderDashboard();
 });
-el.modalCloseBtn.addEventListener('click', () =>
-  el.resultsModal.classList.remove('show')
-);
+el.modalCloseBtn.addEventListener('click', () => hideResultsModal());
 el.modalRestartBtn.addEventListener('click', () => {
-  el.resultsModal.classList.remove('show');
+  hideResultsModal();
   startTest();
 });
 el.resultsModal.addEventListener('click', (e) => {
-  if (e.target === el.resultsModal) el.resultsModal.classList.remove('show');
+  if (e.target === el.resultsModal) hideResultsModal();
 });
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     // Priority 1: close the results modal if it is open.
     if (el.resultsModal.classList.contains('show')) {
-      el.resultsModal.classList.remove('show');
+      hideResultsModal();
       return;
     }
     // Priority 2: abort a running test so keyboard users are never trapped
