@@ -184,6 +184,45 @@ describe('full app boot + word-mode session (parity with original)', () => {
   });
 });
 
+describe('keyboard accessibility guards (a11y wave-2)', () => {
+  it('Space starts a test only when focus is on the body, not on a control', async () => {
+    const { state } = await bootApp();
+
+    // Focus a control (the theme toggle): Space must NOT hijack activation.
+    document.getElementById('themeToggle').focus();
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+    );
+    expect(state.isRunning).toBe(false);
+
+    // Focus on body (nothing interactive focused): Space starts the test.
+    document.getElementById('themeToggle').blur();
+    expect(document.activeElement).toBe(document.body);
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+    );
+    expect(state.isRunning).toBe(true);
+  });
+
+  it('Escape aborts a running test and returns focus to the Start button', async () => {
+    const { state } = await bootApp();
+
+    document.getElementById('startBtn').click();
+    expect(state.isRunning).toBe(true);
+    expect(document.activeElement).toBe(document.getElementById('wordInput'));
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: 'Escape',
+        bubbles: true,
+        cancelable: true,
+      })
+    );
+    expect(state.isRunning).toBe(false);
+    expect(document.activeElement).toBe(document.getElementById('startBtn'));
+  });
+});
+
 describe('boot-time migration and rendering', () => {
   it('migrates legacy typingHistory/typingStats/theme and renders them', async () => {
     const legacyEntry = {

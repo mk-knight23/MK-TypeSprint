@@ -15,6 +15,7 @@ import {
   isTimedMode,
 } from './session.js';
 import { getNextText } from './content.js';
+import { shouldStartOnSpace, shouldAbortOnEscape } from './keyboard.js';
 import { getWeakPracticeWord, updateWeakKeyExplainer } from './practice.js';
 import { renderHeatmap } from './heatmap.js';
 import { renderDashboard } from './dashboard.js';
@@ -127,13 +128,27 @@ el.resultsModal.addEventListener('click', (e) => {
 });
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && el.resultsModal.classList.contains('show')) {
-    el.resultsModal.classList.remove('show');
+  if (e.key === 'Escape') {
+    // Priority 1: close the results modal if it is open.
+    if (el.resultsModal.classList.contains('show')) {
+      el.resultsModal.classList.remove('show');
+      return;
+    }
+    // Priority 2: abort a running test so keyboard users are never trapped
+    // inside the typing input (WCAG 2.1.2).
+    if (shouldAbortOnEscape(e.key, state.isRunning)) {
+      resetGame();
+      return;
+    }
   }
+  // Space starts a test only when no control/input is focused (WCAG 2.1.1).
   if (
-    e.key === ' ' &&
-    document.activeElement !== el.wordInput &&
-    !el.startBtn.disabled
+    shouldStartOnSpace({
+      key: e.key,
+      activeElement: document.activeElement,
+      body: document.body,
+      startDisabled: el.startBtn.disabled,
+    })
   ) {
     e.preventDefault();
     startTest();
